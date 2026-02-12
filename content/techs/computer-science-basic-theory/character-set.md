@@ -1,6 +1,6 @@
 ---
 date: 2026-02-12T12:00:00+08:00
-title: Charaset Set
+title: Character Set
 draft: false
 # bookFlatSection: false        # 是否显示扁平章节（默认false）
 # bookToc: true                 # 是否显示目录（默认true）
@@ -13,7 +13,7 @@ draft: false
 # weight: 1                     # 内容权重（排序用）
 ---
 
-# 字符集（Charaset Set）
+# 字符集（Character Set）
 
 ## 参考资料
 
@@ -24,6 +24,7 @@ draft: false
 5. [GBK 编码范围, GBK 编码表 (qqxiuzi.cn)](https://www.qqxiuzi.cn/zh/hanzi-gbk-bianma.php)
 6. [URI (Java SE 17 & JDK 17) (oracle.com)](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html)
 7. [RFC 2396标准_hotmee的博客-CSDN博客](https://blog.csdn.net/hotmee/article/details/107298462)
+
 
 ## 概念
 

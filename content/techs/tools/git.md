@@ -106,7 +106,7 @@ Git 提供了一个名为 git config 的工具，可以让你获取和设置控�
 
 安装 Git 后，你应该做的第一件事是设置你的用户名和电子邮件地址。这很重要，因为每次 Git 提交都会使用此信息，并且这些信息会不可更改地嵌入到你开始创建的提交中。
 
-`git config --global user.name "Mcfflz"`
+`git config --global user.name mcfflz`
 `git config --global user.email mcfflz@qq.com`
 
 --------------------------------------------------------------------------------
@@ -269,6 +269,12 @@ Git 提供了一个名为 git config 的工具，可以让你获取和设置控�
 ### git submodule
 
 `git submodule` 命令用于管理普通仓库中的外部仓库。这可以是库或其他类型的共享资源。submodule 命令有几个子命令（add、update、sync 等）用于管理这些资源。
+
+`git submodule add <repository>` 添加子模块
+
+注意，如果一个远程仓库存在子模块，仅使用 `git clone` 命令的时候通常不会克隆子模块，只记录子模块的提交哈希。
+
+可以使用 `git clone --recursive <repository>` 的方式来递归获取子模块。或是在 `git clone` 命令后使用 `git submodule init` 命令注册子模块，使用 `git submodule update` 命令来获取子模块。
 
 
 ## git 团队协作
