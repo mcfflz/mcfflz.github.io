@@ -1,2 +1,2 @@
 # mcfflz.github.io
-mcfflz's blog.
+mcfflz's site.
