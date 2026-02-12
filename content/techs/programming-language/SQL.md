@@ -1,6 +1,16 @@
 ---
-params:
-    math: true
+date: 2026-02-12T12:00:00+08:00
+title: SQL
+draft: false
+# bookFlatSection: false        # 是否显示扁平章节（默认false）
+# bookToc: true                 # 是否显示目录（默认true）
+# bookHidden: false             # 是否在侧边栏列表中隐藏（默认false）
+# bookCollapseSection: false    # 章节是否默认折叠（默认false）
+# bookComments: false           # 是否启用评论（默认false）
+# bookSearchExclude: false      # 是否从搜索结果中排除（默认false）
+# params:                       # 自定义参数
+#   maths: true                 # 数学公式支持
+# weight: 1                     # 内容权重（排序用）
 ---
 
 # SQL (sequel)
@@ -208,7 +218,65 @@ UNION
 3. 右连接 right join：和左连接相反。基本不用。
 
 
+## 数据格式
+
+参考 hive，列出了日常使用频率较高的数据格式。
+
+### 数字类型 Numeric Types
+
+| 类型 | 描述 |
+| --- | --- |
+| `TINYINT` | 1 byte 有符号整数，范围 -128 到 127 |
+| `SMALLINT` | 2 byte 有符号整数，范围 -32,768 到 32,767 |
+| `INT` / `INTEGER` | 4 byte 有符号整数，范围-2,147,483,648 到 2,147,483,647 |
+| `BIGINT` | 8 byte 有符号整数 |
+| `FLOAT` | 4 byte 单精度浮点数，1 位符号位，8位指数位，23位尾数位 |
+| `DOUBLE` | 8 byte 双精度浮点数, 1 位符号位，11位指数位，52位尾数位 |
+| `DOUBLE PRECISION` | 同 `DOUBLE` |
+| `DECIMAL` | 38 位精度十进制数 |
+| `NUMERIC` | 同 `DECIMAL` |
+
+
+### 日期/时间类型 Date/Time Types
+
+| 类型 | 描述 |
+| --- | --- |
+| `TIMESTAMP` | 时间戳类型，存储为相对于 UNIX 纪元（1970-01-01 00:00:00 UTC）的偏移量，默认是秒数，可以指定为毫秒，不带时区的信息 <br> 符合 JDBC 规范的 java.sql.Timestamp 格式，即 "YYYY-MM-DD HH:MM:SS.fffffffff"（9位小数精度）可以转换为时间戳 |
+| `DATE` | 日期类型，基本格式 YYYY-­MM-­DD |
+| `INTERVAL` | 时间间隔类型，基本格式 INTERNAL n SECOND/MINUTE/DAY/MONTH/YEAR，其他用法参考官方文档 |
+
+
+### 字符串类型 String Types
+
+| 类型 | 描述 |
+| --- | --- |
+| `STRING` | 字符串 |
+| `VARCHAR` | 变长字符串 |
+| `CHAR` | 字符 |
+
+
+### 其他类型 Misc Types
+
+| 类型 | 描述 |
+| --- | --- |
+| `BOOLEAN` | 布尔类型 (TRUE/FALSE) |
+| `BINARY` | 变长二进制字节类型，查询时通常显示为十六进制 |
+
+
+### 复杂类型 Complex Types
+
+| 类型 | 描述 |
+| --- | --- |
+| `ARRAY<data_type>` | 数组，相同类型元素组成 |
+| `MAP<primitive_type, data_type>` | 键值对集合 |
+| `STRUCT<col_name : data_type [COMMENT col_comment], ...>` | 可包含不同数据类型的字段集合 |
+| `UNIONTYPE<data_type, data_type, ...>` | 联合类型，不同数据类型组成 |
+
+
 ## 函数
+
+参考 hive，列出了日常使用频率较高的函数。
+
 
 ### 聚合函数 Aggregate Functions
 
@@ -225,22 +293,26 @@ min()
 
 ```
 length(string str) -> int: 获取字符串长度
-substr(string str, int start, int len) -> string: 字符串 str 第 start 位开始截取 len 位。len 省略时截取到末尾
 concat(string str1, string str2, ...) -> string: 拼接字符串
 concat_ws(string SEP, string str1, string str2...) -> string: 使用分隔符 SEP 拼接字符串
+substr(string str, int start, int len) -> string: 字符串 str 第 start 位开始截取 len 位。len 省略时截取到末尾
 split(string str, string SEP) -> array: 按照分隔符 SEP 分割字符串 str，返回列表，使用 array[index] 的方式获取数据
-repeat(string str, int n) -> string: 重复 str n 次
 replace(string str, string OLD, string NEW) -> string：将字符串 str 中的字符串 OLD 替换为 NEW 
-trim(string str) -> string: 去除两侧空格
-ltrim(string str) -> string: 去除左侧空格
+repeat(string str, int n) -> string: 重复 str n 次
 lpad(string str, int len, string pad) -> string: 字符串 str 左填充 pad 字符直到 len 长度
 upper(string str) -> string: 变为大写
 lower(string str) -> string: 变为小写
+trim(string str) -> string: 去除两侧空格
+ltrim(string str) -> string: 去除左侧空格
+--------------------------------------------------------------------------------
 mask(string str, string upper, string lower, string number) -> string: 对字符串 str 进行脱敏处理。脱敏规则是 upper 默认为 X，lower 默认为 x，number 默认为 #，均可省略。
 mask_first_n(string str, int n) -> string: 对字符串 str 前 n 个字符进行脱敏处理。脱敏规则同上。
 mask_last_n(string str, int n) -> string: 对字符串 str 后 n 个字符进行脱敏处理。脱敏规则同上。
 mask_show_first_n(string str, int n) -> string: 对字符串 str 脱敏后显示前 n 个字符。脱敏规则同上。
 mask_show_last_n(string str, int n) -> string: 对字符串 str 脱敏后显示后 n 个字符。脱敏规则同上。
+--------------------------------------------------------------------------------
+get_json_object(string json_string, string path) -> string: 从 json 字符串数据中获取指定的 key 。
+--------------------------------------------------------------------------------
 ascii(string str) -> int: 获取字符的 ascii 码
 base64(binary bin) -> string: 获取字符串的 base64 加密
 ```
@@ -248,21 +320,42 @@ base64(binary bin) -> string: 获取字符串的 base64 加密
 ### 正则表达式
 
 ```
-regexp_extract(string subject, string pattern, int index)
-regexp_replace(string INITIAL_STRING, string PATTERN, string REPLACEMENT)
+regexp_extract(string str, string pattern, int index) -> string: 按正则表达式抽取。从 str 中按正则表达式 pattern 抽取第 index 个数据
+regexp_replace(string str, string pattern, string replace_str) -> string: 按正则表达式替换。将 str 中符合正则表达式 pattern 的字符串替换为 replace_str
 ```
+
+正则表达式：
+同 java 正则语法。
+
 
 ### 日期函数
 
 ```
 now() -> string: 返回当前 unix 时间
-unix_timestamp(string date) -> bigint: 返回 date 所在的 unix 时间戳。date 省略时返回当前时间的时间戳。
-from_unixtime(bigint unixtime, string pattern) -> string: 从 unix 时间戳获取当前时间。默认匹配模式是 yyyy-MM-dd HH:mm:ss，可省略。
-to_date(string timestamp) -> string: 返回时间戳所在的日期
+unix_timestamp() -> bigint: 返回当前时间所在的 unix 时间戳
+unix_timestamp(string date) -> bigint: 返回日期 date 所在的 unix 时间戳
+unix_timestamp(string date, string pattern) -> bigint: 返回日期 date 所在的 unix 时间戳，根据匹配模式 parttern 识别 date 格式
+from_unixtime(bigint unix_timestamp, string pattern) -> string: 从时间戳 unix_timestamp 获取当前时间。默认匹配模式是 yyyy-MM-dd HH:mm:ss，可省略。
+to_date(string timestamp) -> date: 返回时间戳 timestamp 所在的日期 yyyy-MM-dd
+--------------------------------------------------------------------------------
+year(string date) -> int: 返回日期 date 的年份
+quarter(string date) -> int: 返回日期 date 的季度
+month(string date) -> int: 返回日期 date 的月份
+day(string date) -> int: 返回日期 date 的日期
+weekofyear(string date) -> int: 返回日期 date 的周数
+hour(string date) -> int: 返回日期 date 的时间，要求 yyyy-MM-dd HH:mm:ss
+mihute(string date) -> int: 返回日期 date 的分钟，要求 yyyy-MM-dd HH:mm:ss
+second(string date) -> int: 返回日期 date 的秒，要求 yyyy-MM-dd HH:mm:ss
 last_day(string date) -> string: 获取当前日期所在月份的最后一天
+--------------------------------------------------------------------------------
+date_add(string date, int n) -> string: 返回当前日期 date 加上 n 天的日期
+date_sub(string date, int n) -> string: 返回当前日期 date 减去 n 天的日期
+add_months(string date, int n, string pattern) -> string: 返回当前日期 date 加上 n 月的日期，可以选择匹配模式
+--------------------------------------------------------------------------------
 datediff(string enddate, string startdate) -> int: 计算 enddate - startdate 的天数，可以为负
 months_between(string enddate, string startdate) -> int: 计算 enddate - startdate 的月数，可以为负
-date_format(date/timestamp/string ts, string pattern) -> string: 
+--------------------------------------------------------------------------------
+date_format(string date/timestamp, string pattern) -> string: 返回日期 date/timestamp 按照匹配模式转换的日期
 ```
 
 ### 窗口函数
@@ -280,12 +373,17 @@ LEAD(return_value [,offset[, default ]]) OVER (
 )
 ```
 
-与 lead 函数相对的是 lag 函数，可以获取前第 N 行的数据。
+与 `lead` 函数相对的是 `lag` 函数，可以获取前第 N 行的数据。
 
-first_value 函数和 last_value 函数的用法相似，可以获取当前行第一个或最后一个出现的数据。
+`first_value` 函数和 `last_value` 函数的用法相似，可以获取当前行第一个或最后一个出现的数据。
 
 
 ### 表生成函数 Table-Generating Functions
+
+`explode(array a)` takes in an array (or a map) as an input and outputs the elements of the array (map) as separate rows. UDTFs can be used in the SELECT expression list and as a part of LATERAL VIEW.
+
+`posexplode(array a)` is similar to explode but instead of just returning the elements of the array it returns the element as well as its position in the original array.
+
 
 ## 示例
 
@@ -307,5 +405,10 @@ WHERE
 GROUP BY user_name, user_level -- 分组维度
 HAVING SUM(order_amount) > 5000 -- 聚合表达式：对汇总结果筛选
 ORDER BY total_consumption DESC; -- 排序
+```
+
+```sql
+SELECT get_json_object(src_json.json, '$.owner') FROM src_json;
+SELECT get_json_object(src_json.json, '$.store.fruit\[0]') FROM src_json;
 ```
 
