@@ -1,7 +1,7 @@
 ---
 date: {{ .Date }}
 title: {{ replace .File.ContentBaseName "-" " " | humanize | title }}
-draft: true
+draft: false
 # bookFlatSection: false        # 是否显示扁平章节（默认false）
 # bookToc: true                 # 是否显示目录（默认true）
 # bookHidden: false             # 是否在侧边栏列表中隐藏（默认false）
