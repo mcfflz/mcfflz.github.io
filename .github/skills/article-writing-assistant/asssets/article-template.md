@@ -4,6 +4,8 @@
 
 在此撰写文章的概要、摘要或引言部分，阐述文章的写作背景、核心问题和主要结论。
 
+简要介绍下文的几个章节。
+
 ---
 
 ## 1. 主要章节一
@@ -38,15 +40,24 @@
 **示例代码片段：**
 
 ```python
+# 这是一个示例函数
+def add(a: int, b: int) -> int:
+   """
+   Adds two numbers together
 
-def example_function():
+   Args:
+       a (int): The first number
+       b (int): The second number
 
-"""这是一个示例函数。"""
-
-return “Hello, World!”
+   Returns:
+       int: The sum of the two numbers
+   """
+   return a + b
 ```
 
-> **引用或重要说明**：可以像这样引用外部观点或突出关键信息[1](@ref)。
+**引用或重要说明：**
+
+可以像这样引用外部观点或突出关键信息[1](@ref)。
 
 
 ### 1.2 子章节二
@@ -66,7 +77,7 @@ return “Hello, World!”
 
 ---
 
-## 3. 结论与展望
+## 3. 总结与展望
 
 在此总结全文的核心论点，并基于前述分析提出未来的展望、建议或待解决的问题。
 
