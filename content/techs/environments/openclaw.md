@@ -19,7 +19,6 @@ draft: false
 
 - [openclaw](https://docs.openclaw.ai/)
 
-
 ## 安装
 
 环境：tencentcloud Ubuntu Server 24.04 LTS 64bit
@@ -70,48 +69,70 @@ openclaw tui
 
 ```mermaid
 graph TB
-    subgraph "Client Access"
-        A[Web Dashboard]
-        B[Terminal TUI]
-        D[Channel Interface]
+    %% === 用户与接入层 ===
+    User[用户/开发者] --> Channels[消息渠道<br/>Telegram/WhatsApp/API]
+    User --> TUI[终端用户界面<br/>TUI]
+    User --> Dashboard[系统仪表板<br/>Dashboard]
+
+    %% === 控制中枢：网关 ===
+    Channels --> Gateway[网关 Gateway<br/>中央调度/会话管理/消息路由]
+    TUI --> Gateway
+    Dashboard --> Gateway
+
+    %% === 核心：智能体 (包含内部组件) ===
+    subgraph "智能体 Agent"
+        direction LR
+        A_Core[代理核心<br/>任务规划与协调] --> A_Memory[记忆系统]
+        A_Core --> A_Skills[技能执行器]
+
+        A_Memory --> M1[短期记忆<br/>会话上下文]
+        A_Memory --> M2[长期记忆<br/>MEMORY.md]
+        A_Memory --> M3[向量记忆<br/>语义检索SQLite向量库]
+
+        A_Skills --> S1[Shell命令]
+        A_Skills --> S2[文件操作]
+        A_Skills --> S3[网络请求]
+        A_Skills --> S_More[...更多插件]
     end
 
-    subgraph "OpenClaw Core"
-        E[Gateway]
-        F[Model Manager]
-        G[Skills Engine]
-        H[Configuration]
-    end
+    %% === 外部服务 ===
+    BaseModel[基础模型服务<br/>Claude API / GPT / Ollama...]
+    Tools[外部API<br/>邮件服务器/Github...]
 
-    subgraph "Model Providers"
-        I[OpenAI]
-        J[Anthropic]
-        K[Local Models]
-        L[Custom Provider]
-    end
+    %% === 主要数据流向 ===
+    Gateway --> A_Core
 
-    A --> E
-    B --> E
-    D --> E
-    E --> F
-    E --> G
-    E --> H
-    F --> I
-    F --> J
-    F --> K
-    F --> L
-    G --> F
-    H --> E
+    A_Core --> BaseModel
+    BaseModel --> A_Core
+    A_Skills --> Tools
+    Tools --> A_Skills
+    
+    A_Core --> Gateway
+
+    %% === 样式定义 ===
+    classDef user fill:#f9f,stroke:#333,stroke-width:2px
+    classDef access fill:#ccf,stroke:#333,stroke-width:2px
+    classDef control fill:#dda0dd,stroke:#333,stroke-width:2px
+    classDef agent fill:#ffa07a,stroke:#333,stroke-width:3px
+    classDef external fill:#98fb98,stroke:#333,stroke-width:2px
+    
+    class User user
+    class Channels,TUI,Dashboard access
+    class Gateway control
+    class A_Core,A_Memory,A_Skills,M1,M2,M3,S1,S2,S3,S_More agent
+    class BaseModel,Tools external
 ```
 
-OpenClaw架构主要包括：
+OpenClaw 架构主要包括：
 
-- **Dashboard/Web界面**: 提供图形化管理界面
 - **TUI (Terminal UI)**: 终端界面，适合快速操作
+- **Dashboard/Web界面**: 提供图形化管理界面
 - **Channels**: 多种接入渠道，支持不同交互方式
-- **Gateway**: 核心网关，处理请求分发和路由
-- **Skills Engine**: 技能引擎，扩展系统功能
-- **Model Manager**: 模型管理器，统一接入不同模型提供商
+- **Gateway**: 网关，所有交互的唯一出入口，处理请求分发和路由
+- **Agent**: 智能体，核心系统功能
+- **Skills**: 技能，Agent可以使用的工具
+- **Memory**: 记忆，Agent可以从长期记忆、每日笔记和当前会话中获取上下文
+- **Models**: 模型，Agent调用模型来规划任务和执行
 
 
 ## 核心配置文件
@@ -213,4 +234,10 @@ openclaw channels enable <channel-name>
 # 禁用通道
 openclaw channels disable <channel-name>
 ```
+
+## 个人理解
+
+openclaw 最大的意义在于让个人能够编辑 agent ，帮助完成一些简单的工作。
+
+openclaw 的架构也可以支持一些多 agent 的复杂应用。
 

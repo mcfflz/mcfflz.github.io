@@ -1,0 +1,16 @@
+# Web Search Skill 依赖
+
+# 必需依赖
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# 可选依赖（根据使用的搜索引擎选择安装）
+
+## DuckDuckGo 搜索（推荐，无需 API Key）
+duckduckgo-search>=3.9.0
+
+## Google 搜索（需要 API Key）
+# google-api-python-client>=2.100.0
+
+## Bing 搜索（需要 API Key）
+# 使用 requests 即可，无需额外包
