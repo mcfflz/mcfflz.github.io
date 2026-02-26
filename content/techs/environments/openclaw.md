@@ -17,7 +17,8 @@ draft: false
 
 ## 参考资料
 
-- [openclaw](https://docs.openclaw.ai/)
+- [openclaw docs](https://docs.openclaw.ai/)
+- [openclaw github](https://github.com/openclaw/openclaw)
 
 ## 安装
 
@@ -67,6 +68,133 @@ openclaw tui
 
 ## OpenClaw 架构
 
+以下内容使用 claude code for vscode + qwen3-coder-plus 分析 github 源代码生成，并经过个人简单编辑：
+
+OpenClaw 是一个AI网关系统，旨在提供一个运行在用户个人设备上的AI助手。该项目能够通过多种通信渠道（如WhatsApp、Telegram等）与用户交互。
+
+**项目类型**：多渠道AI网关系统
+**技术栈**：TypeScript、Node.js
+**核心目标**：提供一个本地化、快速响应、始终在线的个人AI助手
+**适用场景**：个人用户希望在常用通讯渠道中获得AI助手服务，同时保护隐私
+
+### 网关 (Gateway)
+
+Gateway 是 OpenClaw 的核心组件，充当 WebSocket 和 HTTP 服务器，负责处理客户端连接、认证、设备管理、代理调用等功能。负责：
+
+- 提供HTTP和WebSocket接口服务
+- 管理聊天和消息传递
+- 认证和权限控制
+- 消息路由和处理
+- 处理与AI模型的通信
+
+### AI代理 (Agents)
+
+Agent 是 OpenClaw 中的智能体，具有模型推理、工具调用、沙箱执行、身份验证、会话管理等功能。负责：
+
+- 提示工程和上下文管理，包括会话 Session 、技能 Skills 、记忆 Memory 等
+- AI对话管理
+- 模型选择和负载均衡
+- 认证配置文件管理和轮换
+- 错误处理和恢复机制
+
+### 消息渠道 (Channels)
+
+Channels 为 OpenClaw 集成了多个消息渠道：
+
+- 支持多种消息渠道（WhatsApp、Telegram等）
+- 实现消息路由和身份验证
+- 处理不同的消息格式和协议
+- 提供统一的通道抽象接口
+
+### CLI 命令行和 Dashboard 界面
+
+OpenClaw 提供了完整的 CLI 命令行界面和 Dashboard web 管理界面，支持：
+
+- 系统安装和配置
+- 网关启动和管理
+- 消息发送
+- 配置管理
+- 插件管理
+- 等等
+
+### 4.2 数据流
+
+1. 用户通过任一消息渠道发送请求
+2. 对应通道接收并验证消息
+3. 消息被转发至Gateway
+4. Agent加载上下文并处理消息
+5. Gateway与AI模型通信
+6. 响应返回给相应的消息通道
+7. 通道将响应发送回用户
+
+### 项目结构
+
+分析使用 2026-02-25 e0201c2774b8465b3bde85a097196a7241b51ab1 提交版本：
+
+```
+openclaw/
+├── apps/                       # 移动端和桌面端应用 (iOS, Android, macOS)  
+├── assets/                     # 静态资源
+├── docs/                       # 文档
+├── extensions/                 # 扩展功能
+├── git-hooks/                  # Git钩子
+├── skills/                     # 预设技能
+├── src/                        # 核心源代码
+│   ├── acp/                    # Agent Client Protocol
+│   ├── agents/                 # AI代理核心逻辑
+│   ├── auto-reply/             # 自动回复功能
+│   ├── browser/                # 浏览器自动化
+│   ├── canvas-host/            # Canvas功能
+│   ├── channels/               # 消息通道通用逻辑
+│   ├── cli/                    # 命令行界面
+│   ├── commands/               # 命令处理
+│   ├── compat/                 # 兼容性工具
+│   ├── config/                 # 配置管理
+│   ├── cron/                   # 定时任务
+│   ├── daemon/                 # 守护进程
+│   ├── discord/                # Discord通道
+│   ├── gateway/                # 核心网关逻辑
+│   ├── hooks/                  # 钩子系统
+│   ├── imessage/               # iMessage通道
+│   ├── infra/                  # 基础设施工具
+│   ├── line/                   # LINE通道
+│   ├── link-understanding/     # 链接解析
+│   ├── logging/                # 日志系统
+│   ├── markdown/               # Markdown处理
+│   ├── media/                  # 媒体处理
+│   ├── media-understanding/    # 媒体理解
+│   ├── memory/                 # 记忆系统
+│   ├── node-host/              # 节点主机
+│   ├── pairing/                # 配对系统
+│   ├── plugins/                # 插件系统
+│   ├── plugin-sdk/             # 插件SDK
+│   ├── providers/              # 模型提供商
+│   ├── routing/                # 路由系统
+│   ├── scripts/                # 脚本
+│   ├── security/               # 安全功能
+│   ├── sessions/               # 会话管理
+│   ├── shared/                 # 共享代码
+│   ├── signal/                 # Signal通道
+│   ├── slack/                  # Slack通道
+│   ├── telegram/               # Telegram通道
+│   ├── terminal/               # 终端功能
+│   ├── test-helpers/           # 测试辅助
+│   ├── test-utils/             # 测试工具
+│   ├── tts/                    # 文字转语音
+│   ├── tui/                    # 终端用户界面
+│   ├── types/                  # 类型定义
+│   ├── utils/                  # 工具函数
+│   ├── web/                    # Web相关功能
+│   ├── whatsapp/               # WhatsApp通道
+│   ├── wizard/                 # 向导系统
+│   ├── entry.ts                # 入口文件
+│   ├── index.ts                # 主入口文件
+│   └── logger.ts               # 日志记录
+├── ui/                         # 用户界面
+└── test/                       # 测试文件
+```
+
+### 架构图
 ```mermaid
 graph TB
     %% === 用户与接入层 ===
@@ -126,14 +254,13 @@ graph TB
 OpenClaw 架构主要包括：
 
 - **TUI (Terminal UI)**: 终端界面，适合快速操作
-- **Dashboard/Web界面**: 提供图形化管理界面
+- **Dashboard**: 提供图形化Web管理界面
 - **Channels**: 多种接入渠道，支持不同交互方式
 - **Gateway**: 网关，所有交互的唯一出入口，处理请求分发和路由
-- **Agent**: 智能体，核心系统功能
-- **Skills**: 技能，Agent可以使用的工具
+- **Agent**: 智能体，核心功能
+- **Skills**: 技能，Agent可以使用的技能包
 - **Memory**: 记忆，Agent可以从长期记忆、每日笔记和当前会话中获取上下文
 - **Models**: 模型，Agent调用模型来规划任务和执行
-
 
 ## 核心配置文件
 
@@ -141,8 +268,7 @@ OpenClaw 架构主要包括：
 vi ~/.openclaw/openclaw.json
 ```
 
-
-## 常用 openclaw 命令行工具
+## 常用 openclaw 命令
 
 ### 配置管理
 ```bash
@@ -237,7 +363,8 @@ openclaw channels disable <channel-name>
 
 ## 个人理解
 
-openclaw 最大的意义在于让个人能够编辑 agent ，帮助完成一些简单的工作。
+openclaw 最大的意义在于让个人能够编辑 agent ，构建个性化的工作流程，帮助完成一些简单的工作任务。
 
 openclaw 的架构也可以支持一些多 agent 的复杂应用。
 
+它仍然是提示词工程的一种应用。
