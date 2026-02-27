@@ -2,7 +2,7 @@
 
 > AI 编码协作规范
 
-本文档旨在为参与本代码生成项目的AI编码AGENT提供明确、可执行的指导。所有AGENT在开始任何工作前，必须阅读并遵守本文件中的规则。
+本文档旨在为参与本项目的AI编码AGENT提供明确、可执行的指导。所有AGENT在开始任何工作前，必须阅读并遵守本文件中的规则。
 
 ---
 
@@ -24,14 +24,11 @@
 
 - ❌ 引入新依赖（除非明确要求）
 
-- ❌ 修改配置文件（.env, CI/CD, 构建配置等）
-
 - ❌ 在未被要求的文件中进行更改
 
 - ❌ 使用 `any` 类型绕过类型检查
 
 - ❌ 忽略或跳过测试用例
-
 
 ### 1.3 代码质量要求
 
@@ -65,14 +62,17 @@
 
     项目名称: [电商平台订单服务]
     项目类型: [API 后台服务]
-    主要语言: [Python]
-    数据库: [MySQL]
-    部署方式：[docker compose]
+    技术栈选择：
+      - Python: 3.10.x 
+      - MySQL:  ≥ 8.0.x
+    部署方式：[Docker compose]
 
 ### 2.2 运行环境
 
-    硬件环境：4C 4GMem
-    操作系统：Ubuntu 24.04 LTS
+    开发测试环境：
+    - 硬件环境：4C / 4G Mem / 30G Disk
+    - 操作系统：Ubuntu server 24.04 LTS
+    - 预装命令：docker、python3、pip3
 
 ### 2.3 目录结构
 
@@ -80,23 +80,24 @@
     ├── src/                  # 源代码
     ├── tests/                # 测试文件
     ├── docs/                 # 文档，包含 API 说明文档
-    ├── scripts/              # 构建/部署脚本
-    ├── docker-compose.yaml/  # docker compose 配置
+    ├── scripts/              # 构建脚本
+    ├── docker-compose.yaml   # docker compose 配置
     └── README.md/            # 项目说明
 
+### 2.4 编码规范
 
-### 2.4 代码规范
+核心原则：保持一致性，优先遵循PEP 8
 
 #### 2.4.1 命名约定
 
   | 类型 | 风格 | 示例 |
   |------|------|------|
-  | 文件名 | kebab-case | user-service.ts |
-  | 组件名 | PascalCase | UserProfile.tsx |
-  | 函数名 | camelCase | getUserById |
-  | 常量名 | UPPER_SNAKE_CASE | MAX_RETRY_COUNT |
-  | 类型/接口 | PascalCase | User 或 IUser |
-
+  | 模块/文件名 | snake_case | `user_service.py` |
+  | 类名 | PascalCase | `UserProfile` |
+  | 函数/方法名 | snake_case | `get_user_by_id` |
+  | 变量名 | snake_case | `user_list` |
+  | 常量名 | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT`, `DEFAULT_PAGE_SIZE` |
+  | 私有成员 | _single_leading_underscore | `_internal_cache` |
 
 #### 2.4.2 导入顺序
 
@@ -104,13 +105,15 @@ Python 导入顺序规范：
 
 - 标准库模块（Python内置模块）
 
-- 相关的第三方库模块
+- 第三方库模块
 
-- 本地应用程序/库模块（使用绝对导入或相对导入）
+- 本地应用程序/库模块（使用绝对导入）
 
 - 每组导入之间用空行分隔
 
-- 每个组内按字母顺序排序
+- 在同一组内，先写 import ...语句，再写 from ... import ...语句，并分别按字母顺序排序。
+
+示例：
 
 ```python
 # 1. 标准库导入
@@ -124,14 +127,14 @@ import numpy as np
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 
-# 3. 本地应用程序/模块导入（绝对或相对导入）
+# 3. 本地应用程序/模块导入（使用绝对导入）
 from app.models import User
 from app.services.user_service import UserService
-from .utils import format_date
-from ..config import settings
 ```
 
-#### 2.4.3 错误处理模式
+#### 2.4.3 异常处理模式
+
+明确异常类型，不用裸except
 
 所有的业务异常和系统异常统一定义错误码和错误描述
 
@@ -333,15 +336,318 @@ def validate_input(input_data: dict):
         raise error
 ```
 
-### 2.4 测试规范
+### 2.5 API设计规范
+
+### 2.4.1 核心原则
+
+- **RESTful 架构**：以资源为中心，使用标准HTTP方法表达操作意图
+
+- **无状态性**：每个请求包含所有必要信息，服务器不存储客户端状态
+
+- **一致性**：统一的URI命名、HTTP方法使用、响应格式和状态码
+
+### 2.4.2 URL 设计规范
+
+#### 2.4.2.1 资源命名
+
+- 使用**名词复数**形式，如 `/orders` 而非 `/order`
+
+- 使用**小写字母+连字符**分隔，如 `/user-orders`
+
+- 层级不超过3层，避免过度嵌套
+
+- 示例：
+  ```
+  ✅ 正确：GET /api/v1/orders
+  ❌ 错误：GET /api/getOrders
+  ```
+
+#### 2.4.2.2 版本控制
+
+- 在URL路径中体现版本：`/api/v1/orders`
+
+- 同时支持请求头版本标识：`Accept: application/vnd.example.v1+json`
+
+#### 2.4.2.3 资源关系表达
+
+- **强关联用子资源**：例如`/users/{userId}/orders`（获取用户的订单）
+
+- **独立查询用过滤**：例如`/orders?userId={userId}`（通过查询参数过滤）
+
+- **批量操作**：例如`POST /orders/batch`（批量创建订单）
+
+### 2.4.3 HTTP 方法使用规范
+
+  | 方法 | 操作语义 | 适用场景 | 示例 |
+  |------|----------|----------|------|
+  | GET | 查询/获取资源 | 读取数据，无副作用 | `GET /api/v1/orders` |
+  | POST | 创建资源 | 新增数据，有副作用 | `POST /api/v1/orders` |
+  | PUT | 全量更新资源 | 替换整个资源，需传全字段 | `PUT /api/v1/orders/{id}` |
+  | PATCH | 部分更新资源 | 仅更新指定字段 | `PATCH /api/v1/orders/{id}` |
+  | DELETE | 删除资源 | 删除指定资源 | `DELETE /api/v1/orders/{id}` |
+
+### 2.4.4 请求与响应规范
+
+#### 2.4.4.1 请求参数
+
+- **路径参数**：标识资源层次，如 `/orders/{orderId}`
+
+- **查询参数**：用于筛选、排序、分页
+  - 分页：`?page=1&size=20`
+  - 排序：`?sort=created_at,desc`
+  - 过滤：`?status=pending&start_date=2024-01-01`
+
+#### 2.4.4.2 响应格式
+
+示例：
+
+**成功响应格式**：
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "items": [...],
+    "total": 100,
+    "page": 1,
+    "size": 20
+  },
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+**异常响应格式**：
+```json
+{
+  "code": 40001,
+  "message": "参数验证失败",
+  "details": {
+    "field": "amount",
+    "error": "金额必须大于0"
+  },
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+#### 2.4.4.3 HTTP 状态码使用
+
+| 状态码 | 含义 | 适用场景 |
+|--------|------|----------|
+| 200 OK | 成功 | 一般查询成功 |
+| 201 Created | 创建成功 | 资源创建成功 |
+| 204 No Content | 成功无内容 | 删除成功 |
+| 400 Bad Request | 客户端错误 | 参数验证失败 |
+| 401 Unauthorized | 未认证 | 缺少或无效token |
+| 403 Forbidden | 无权限 | 权限不足 |
+| 404 Not Found | 资源不存在 | 请求的资源不存在 |
+| 429 Too Many Requests | 请求过多 | 限流触发 |
+| 500 Internal Server Error | 服务器错误 | 未捕获的异常 |
+
+### 2.4.5 安全规范
+
+- **HTTPS**：所有API必须使用HTTPS传输
+
+- **认证授权**：使用JWT token进行用户认证和权限控制
+
+- **请求签名**：支付等敏感接口使用HMAC签名验证
+
+- **限流防护**：实现API限流，防止恶意请求
+
+- **敏感数据脱敏**：响应中脱敏手机号、身份证等敏感信息
+
+
+### 2.5 日志规范
+
+日志应当符合格式标准，便于快速排查问题
+
+注意：日志中的身份证号等敏感信息应当脱敏，密码等安全信息不应当就。
+
+#### 2.5.1 JSON日志格式标准
+
+示例：
+```json
+{
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "level": "INFO",
+  "logger": "order_service",
+  "message": "订单创建成功",
+  "trace_id": "abc123xyz",
+  "span_id": "def456",
+  "service_name": "order-service",
+  "environment": "production",
+  "request_id": "req_123456",
+  "user_id": "u12345",
+  "details": {
+    "order_id": "ORD202401010001",
+    "amount": 299.99,
+    "items_count": 3
+  },
+  "duration_ms": 150,
+  "exception": null
+}
+```
+
+#### 2.5.2 必选字段说明
+
+| 字段 | 类型 | 说明 | 必选 |
+|------|------|------|------|
+| timestamp | string | ISO 8601格式时间戳 | 是 |
+| level | string | 日志级别 | 是 |
+| message | string | 日志消息 | 是 |
+| logger | string | 日志记录器名称 | 是 |
+| service_name | string | 服务名称 | 是 |
+| environment | string | 环境标识 | 是 |
+| trace_id | string | 分布式追踪ID | 是 |
+| request_id | string | 请求唯一ID | 是 |
+
+#### 2.5.3 业务上下文字段
+
+| 字段 | 说明 | 适用场景 |
+|------|------|----------|
+| user_id | 用户ID | 用户相关操作 |
+| order_id | 订单ID | 订单相关操作 |
+| payment_id | 支付ID | 支付相关操作 |
+| api_path | API路径 | API请求日志 |
+| http_method | HTTP方法 | API请求日志 |
+| status_code | HTTP状态码 | API响应日志 |
+| client_ip | 客户端IP | 访问日志 |
+| user_agent | 用户代理 | 访问日志 |
+
+
+### 2.5.4 日志性能优化
+
+1. **异步写入**：使用异步日志处理器避免阻塞主线程
+
+2. **批量写入**：配置日志批量写入，减少IO次数
+
+3. **日志轮转**：按大小和时间轮转，避免单文件过大
+
+4. **日志分级存储**：不同级别日志存储到不同位置
+
+### 2.6 数据库与ORM规范
+
+#### 2.6.1 引擎与字符集
+
+- **存储引擎**：统一使用InnoDB，支持事务和行级锁
+
+- **字符集**：统一使用utf8mb4，支持完整Unicode和表情符号
+
+- **排序规则**：`utf8mb4_general_ci`（不区分大小写）
+
+#### 2.6.2 表设计原则
+
+1. **单表数据量控制**：建议500万行以内，超过需考虑分表
+
+2. **字段数量控制**：单表字段数建议不超过50个
+
+3. **禁止预留字段**：不使用`future_use1`等预留字段
+
+4. **冷热数据分离**：历史数据归档到历史表
+
+5. **禁止存储二进制文件**：图片、文件等存储路径，不存数据库
+
+#### 2.6.3 命名规范
+
+| 对象类型 | 命名规范 | 示例 |
+|----------|----------|------|
+| 数据库 | 小写+下划线，见名知义 | `order_db` |
+| 表名 | 小写+下划线，复数形式 | `orders`, `order_items` |
+| 字段名 | 小写+下划线 | `user_id`, `created_at` |
+| 主键 | `id`（bigint unsigned auto_increment） | `id` |
+| 外键 | `关联表名_字段名` | `user_id`, `order_id` |
+| 索引 | `idx_字段名[_字段名...]` | `idx_user_status` |
+| 唯一索引 | `uk_字段名[_字段名...]` | `uk_order_no` |
+
+#### 2.6.4 数据类型选择
+
+| 字段类型 | 推荐类型 | 说明 | 示例 |
+|----------|----------|------|------|
+| 整数 | 根据范围选择最小类型 | TINYINT(1字节)到BIGINT(8字节) | `status TINYINT UNSIGNED` |
+| 字符串 | VARCHAR(长度) | 按实际需要设置长度 | `username VARCHAR(50)` |
+| 文本 | 避免使用TEXT/BLOB | 大文本单独建表 | 报文等大文本单独存储 |
+| 金额 | DECIMAL(M,N) | 精确浮点数 | `amount DECIMAL(10,2)` |
+| 时间 | DATETIME/TIMESTAMP | 按需选择 | `created_at DATETIME` |
+| 布尔 | TINYINT(1) | 0/1表示真假 | `is_deleted TINYINT(1)` |
+| 枚举 | 避免ENUM过长 | 选项超20个改用关联表 | `status ENUM('pending','paid')` |
+
+#### 2.6.5 字段约束
+
+1. **NOT NULL**：尽可能定义字段为NOT NULL，提高查询性能
+
+2. **默认值**：合理设置默认值，如`created_at DEFAULT CURRENT_TIMESTAMP`
+
+3. **无符号**：非负数使用UNSIGNED，扩大存储范围
+
+4. **注释**：所有字段必须添加COMMENT说明
+
+#### 2.6.6 索引设计规范
+
+1. **主键索引**：每张InnoDB表必须有主键，建议自增ID
+
+2. **索引数量**：单表索引不超过5个
+
+3. **索引字段数**：联合索引字段不超过5个
+
+4. **前缀索引**：字符串索引长度不超过8个字符
+
+#### 2.6.7 必须建立索引的场景
+
+1. **主键和外键**：自动创建
+
+2. **WHERE条件字段**：频繁作为查询条件的字段
+
+3. **JOIN关联字段**：多表连接的关联列
+
+4. **ORDER BY/GROUP BY字段**：排序和分组字段
+
+5. **DISTINCT字段**：去重字段
+
+#### 2.6.8 SQL开发规范
+
+1. **禁止SELECT ***：明确列出所需字段
+   ```sql
+   -- ❌ 错误
+   SELECT * FROM orders WHERE user_id = 123;
+   
+   -- ✅ 正确
+   SELECT id, order_no, amount, status FROM orders WHERE user_id = 123;
+   ```
+2. **避免大事务**：事务内操作行数不超过1000行
+
+4. **批量操作分批进行**：超过100万行的操作分批执行
+
+5. **使用JOIN替代子查询**：JOIN性能通常优于子查询
+
+6. **避免过多JOIN**：单条SQL的JOIN表不超过3个
+
+7. **联合索引必须从最左列开始使用**
+
+#### 2.6.8 数据库安全规范
+
+1. **禁止明文存储密码**：使用哈希加盐存储
+
+2. **最小权限原则**：应用使用只读/只写账号
+
+3. **SQL注入防护**：使用参数化查询或ORM
+
+4. **敏感数据加密**：身份证、手机号等字段加密存储
+
+5. **审计日志**：记录所有数据变更操作
+
+### 2.7 测试规范
 
 Python 测试最佳实践：
 
 - 每个测试应该独立，不依赖其他测试的执行顺序
+
 - 使用夹具（fixtures）管理测试资源和状态
+
 - 遵循 Arrange-Act-Assert 模式
+
 - 为错误路径和边界条件编写测试
+
 - 使用参数化测试减少重复代码
+
 - 集成测试应该与外部依赖隔离（使用mock）
 
 ```python
@@ -452,7 +758,7 @@ exclude_lines = [
 # - 必须测试：所有公共API、边界条件、错误处理路径
 ```
 
-### 2.6 Git 提交规范
+### 2.8 Git 提交规范
 
     <type>(<scope>): <subject>
 
@@ -470,9 +776,11 @@ exclude_lines = [
     fix(api): handle null response from user endpoint
     docs(readme): update installation instructions
 
-### 2.7 环境变量
+### 2.9 环境变量
 
 所有配置项均以环境变量方式体现
+
+敏感信息（密码、密钥、内网IP），必须使用环境变量
 
 示例环境变量： (不要在代码中硬编码)
 
@@ -482,16 +790,31 @@ exclude_lines = [
     LOG_LEVEL=info          # 日志级别: debug | info | warn | error
     ENABLE_CACHE=true       # 是否启用缓存
 
-
-### 2.8 参考文档
+### 2.10 参考文档
 
 - [项目 Wiki](./docs/wiki.md)
 
 - [API 文档](./docs/api.md)
 
+- [项目介绍](README.md)
+
 ---
 
-## 3 紧急联系
+## 3 部署要求
+
+使用 README.md：
+
+- 一行启动命令：docker-compose up --build
+
+- 查看服务访问地址（如 http://localhost:8000）
+
+- 直接用复制的 curl 命令验证核心功能的步骤
+
+- 包含预置的测试账号信息
+
+---
+
+## 4 紧急联系
 
 遇到以下情况时，**停止操作并询问人类**：
 

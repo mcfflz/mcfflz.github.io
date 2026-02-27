@@ -21,173 +21,127 @@ draft: false
 
 ## 概述
 
-OpenCode是一个开源的编程助手工具，专注于提供智能化的代码生成、补全和分析功能。它能够帮助开发者提高编程效率，通过自然语言描述生成相应代码，或对现有代码进行优化建议。
-
-OpenCode的主要特性包括：
-- 智能代码补全
-- 代码生成
-- 代码重构建议
-- 错误检测与修复
-- 文档自动生成
+OpenCode是一个开源的编程助手工具，专注于提供智能化的代码生成、补全和分析功能。能够帮助开发者提高编程效率，通过自然语言描述生成相应代码，或对现有代码进行优化建议。
 
 ## 安装
 
-### 通过包管理器安装
+环境：tencentcloud Ubuntu Server 24.04 LTS 64bit
 
 ```bash
-# 使用npm安装
-npm install -g opencode-cli
-
-# 使用pip安装
-pip install opencode
-
-# 使用brew安装（macOS）
-brew install opencode
+# 使用官方提供的安装脚本
+curl -fsSL https://opencode.ai/install | bash
+# 也可以使用npm安装
+npm install -g opencode-ai
 ```
 
-### 从源码安装
+## 配置文件
+
+- `~/.config/opencode/opencode.json` - 全局配置，通常在这里配置模型供应商
+
+- `opencode.json` - 项目特定的配置
+
+## opencode tui 常用命令
+
+OpenCode 提供了一个终端用户界面（TUI），可以通过以下命令启动：
 
 ```bash
-# 克隆仓库
-git clone https://github.com/opencodecn/opencode.git
-cd opencode
-
-# 构建并安装
-make build
-sudo make install
+# 当前工作目录
+opencode
+# 或者指定工作目录
+opencode /path/to/project
 ```
 
-## 核心概念
+TUI 提供了直观的终端界面，用于在项目中与 LLM 协作。
 
-### 项目配置
+### 文件引用
 
-OpenCode使用配置文件来管理项目的特定设置。主要配置文件包括：
+可以在消息中使用 `@` 引用文件。
 
-- `.opencode/config.json` - 项目特定的配置
-- `opencode.yml` - 项目级配置文件
-- `.opencodeignore` - 指定不需要处理的文件或目录
-
-### 工作空间
-
-OpenCode支持在工作空间级别进行代码理解和分析。工作空间通常对应一个项目目录，可以包含多个模块或子项目。
-
-### 语言模型集成
-
-OpenCode集成了先进的AI语言模型，能够理解上下文、遵循编程规范并生成高质量的代码。
-
-## 常用命令
-
-### 项目初始化
-
-```bash
-# 初始化新项目
-opencode init
-
-# 初始化指定类型的项目
-opencode init --type javascript
+```
+@packages/functions/src/api/index.ts 中的身份验证是如何处理的？
 ```
 
-### 代码生成
+文件内容会自动添加到对话中。
 
-```bash
-# 根据注释生成函数
-opencode generate --from-comment
+### Bash 命令
 
-# 生成单元测试
-opencode generate --test
-
-# 从自然语言描述生成代码
-opencode generate --prompt "create a function to sort an array"
+以 `!` 开头的消息会运行 shell 命令。
+```
+!ls -la
 ```
 
-### 代码分析
+命令的输出会作为工件结果添加到对话中。
 
-```bash
-# 分析代码质量
-opencode analyze
+### 斜杠命令
 
-# 检查潜在错误
-opencode check
+在使用 OpenCode TUI 时，可以输入 `/` 后跟命令名称来快速执行操作。以下是常用的斜杠命令：
 
-# 获取优化建议
-opencode suggest
+#### help
+显示帮助对话框。
+```
+/help
 ```
 
-### 文件操作
-
-```bash
-# 对特定文件进行操作
-opencode --file src/main.js
-
-# 批量处理文件
-opencode --batch --pattern "*.js"
+#### init
+创建或更新 `AGENTS.md` 文件。[了解更多](https://www.opencodecn.com/docs/rules)。
+```
+/init
 ```
 
-### 实时模式
-
-```bash
-# 启动实时代码辅助
-opencode serve
-
-# 在指定端口启动服务
-opencode serve --port 8080
+#### models
+列出可用模型。
+```
+/models
 ```
 
-### 配置管理
-
-```bash
-# 查看当前配置
-opencode config --list
-
-# 设置配置项
-opencode config --set key=value
-
-# 导出配置
-opencode config --export
+#### new
+开始新对话。别名：`/clear`
+```
+/new
 ```
 
-## 配置选项
+#### sessions
+列出并切换会话。别名：`/resume`、`/continue`
+```
+/sessions
+```
 
-### 通用配置
+#### undo
+撤销对话中的最后一条消息。删除最近的用户消息、所有后续响应以及任何文件更改。
+> 提示：所做的任何文件更改也会被还原。
+在内部，这使用 Git 来管理文件更改。所以你的项目**需要是一个 Git 仓库**。
+```
+/undo
+```
 
-- `model` - 指定使用的AI模型
-- `temperature` - 控制输出随机性的参数
-- `max_tokens` - 生成内容的最大token数
-- `language` - 指定编程语言
+#### redo
+重做之前撤销的消息。仅在使用 `/undo` 后可用。
+> 提示：任何文件更改也将被恢复。
+在内部，这使用 Git 来管理文件更改。所以你的项目**需要是一个 Git 仓库**。
+```
+/redo
+```
 
-### 项目特定配置
+#### exit
+退出 OpenCode。别名：`/quit`、`/q`
+```
+/exit
+```
 
-- `include` - 需要处理的文件模式
-- `exclude` - 不需要处理的文件模式
-- `rules` - 自定义规则集
-- `targets` - 目标语言版本
+#### share
+仅在一个 session 下有效。分享当前对话。
+```
+/share
+```
 
-## 最佳实践
+#### unshare
+仅在一个 session 下有效。取消分享当前对话。
+```
+/unshare
+```
 
-1. **配置项目特定设置** - 在项目根目录创建配置文件以获得最佳效果
-2. **使用有意义的注释** - 提供清晰的注释有助于OpenCode更好地理解需求
-3. **定期更新** - 保持OpenCode更新到最新版本以获取新功能和改进
-4. **审查生成的代码** - 虽然生成的代码通常是正确的，但仍需人工审查
-
-## 故障排除
-
-### 常见问题
-
-Q: OpenCode无法识别我的项目类型？
-A: 确保项目中有适当的配置文件，或者使用 `opencode init` 命令初始化项目。
-
-Q: 生成的代码不符合预期？
-A: 尝试提供更详细的描述或调整配置参数，如 `temperature`。
-
-Q: 如何跳过某些文件？
-A: 在 `.opencodeignore` 文件中添加要忽略的文件或目录。
-
-## 集成开发环境(IDE)
-
-OpenCode提供多种IDE插件，支持主流开发环境：
-
-- Visual Studio Code
-- IntelliJ IDEA
-- Sublime Text
-- Vim/Neovim
-- Atom
+#### compact
+仅在一个 session 下有效。压缩当前对话。别名：`/summarize`
+```
+/compact
+```
