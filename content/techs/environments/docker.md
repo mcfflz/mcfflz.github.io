@@ -10,7 +10,7 @@ draft: false
 # bookSearchExclude: false      # 是否从搜索结果中排除（默认false）
 # params:                       # 自定义参数
 #   maths: true                 # 数学公式支持
-weight: 1                     # 内容权重（排序用）
+# weight: 1                     # 内容权重（排序用）
 ---
 
 # Docker
@@ -29,6 +29,18 @@ Docker 解决了"代码在我机器上能跑起来"的问题，通过容器化�
 - **容器（Container）**：容器是从镜像创建的运行实例。它可以被启动、开始、停止、删除。每个容器都是相互隔离的、保证安全的平台。
 - **仓库（Repository）**：仓库是集中存放镜像文件的场所。Docker Hub 是官方提供的公共仓库，用户可以上传自己的镜像，也可以下载他人分享的镜像。
 
+```sequence
+title: docker engine
+participant remote machine\nregistry\n（远程仓库） as a
+participant local machine\nimages\n（本地镜像） as b
+participant local machine\ncontainers\n（容器） as c
+
+note over a: repositories
+b->a: docker search images
+a->b: docker pull images
+b->b: docker images
+b->c: docker run image
+```
 
 ## 安装
 
@@ -77,32 +89,7 @@ sudo systemctl restart docker
 sudo docker run hello-world
 ```
 
-## 核心概念详解
-
-### 镜像与容器的关系
-
-Docker 遵循"构建一次，到处运行"的原则。镜像和容器本质上都是一个文件系统，它们唯一的不同，就是镜像（image）是只读的，而容器（container）是可读可写的。
-
-- 镜像就像一个模板，包含了运行应用所需的一切
-- 容器是镜像的运行时实例，多个容器可以从同一个镜像启动
-
-### 存储驱动
-
-Docker Engine 支持多种存储驱动，如 `overlay2`、`aufs` 和 `btrfs`。默认使用 `overlay2` 存储驱动，它提供了更好的性能和稳定性。
-
-### 网络
-
-Docker 网络管理借鉴了虚拟机网络管理思想，为容器提供网络连接功能。Docker 支持多种网络模式：
-- Bridge（桥接）：默认模式，容器通过网桥连接
-- Host（主机）：容器直接使用宿主机网络
-- None：无网络连接
-
-### 数据卷（Volume）
-
-数据卷用于实现数据持久化，使数据在容器生命周期之外得到保留。数据卷可以在容器间共享和重用，对数据卷的修改会直接生效，且更新数据卷不影响镜像。
-
-
-## Docker 常用命令
+## docker cli 常用命令
 
 ### 镜像相关命令
 
@@ -133,7 +120,7 @@ Docker 网络管理借鉴了虚拟机网络管理思想，为容器提供网络�
 - `docker network` - 管理网络
 - `docker system prune` - 清理未使用的数据（镜像、容器、网络、数据卷）
 
-### Docker Run 常用参数
+### docker run 常用参数
 
 - `-d` - 后台运行容器
 - `-it` - 交互式运行容器
@@ -142,6 +129,283 @@ Docker 网络管理借鉴了虚拟机网络管理思想，为容器提供网络�
 - `-e KEY=VALUE` - 设置环境变量
 - `--name <name>` - 指定容器名称
 - `--rm` - 容器退出时自动删除
+
+## docker 网络
+
+Docker 网络管理思路来自于虚拟机，把虚拟机中管理网络的思想移植过来，对于构建在虚拟机上的公有云来说，网络安全和高效是非常重要的。
+
+### Docker 网络驱动类型
+
+- **bridge（网桥模式）**：默认网络驱动，容器通过 docker0 虚拟网桥连接，每个容器有独立的 IP
+- **host（主机模式）**：容器直接使用主机网络，没有独立的 IP，性能更好但隔离性差
+- **none（无网络）**：容器有独立的 Network Namespace，但不进行任何网络配置
+- **container（容器共享）**：新创建的容器与一个已存在的容器共享同一个 Network Namespace
+- **overlay（覆盖网络）**：用于 Docker Swarm 跨主机通信
+- **macvlan**：为容器分配 MAC 地址，使容器看起来像物理设备
+
+### 网络操作命令
+
+```bash
+# 列出所有网络
+docker network ls
+
+# 创建自定义网络
+docker network create my-network
+
+# 查看网络详情
+docker network inspect my-network
+
+# 容器连接到网络
+docker network connect my-network <container>
+
+# 容器断开网络
+docker network disconnect my-network <container>
+
+# 删除网络
+docker network rm my-network
+```
+
+### 使用示例
+
+```bash
+# 使用自定义 bridge 网络运行容器
+docker run --name web --network my-network -p 8080:80 nginx
+docker run --name app --network my-network my-app
+
+# 使用 host 网络（容器没有独立 IP，直接使用主机端口）
+docker run --network host nginx
+
+# 容器共享网络（新容器与已存在容器共享 network namespace）
+docker run --network container:existing-container alpine
+```
+
+## Dockerfile
+
+Dockerfile 是一个用来构建 Docker 镜像的文本文件，包含了一系列构建镜像所需的指令。
+
+### 常用指令
+
+| 指令 | 说明 |
+|------|------|
+| `FROM` | 指定基础镜像 |
+| `RUN` | 执行命令（构建时） |
+| `CMD` | 容器启动时执行的命令（可被覆盖） |
+| `ENTRYPOINT` | 容器启动时执行的命令（不可被覆盖） |
+| `COPY` | 复制文件到镜像 |
+| `ADD` | 复制文件（支持 URL 和解压） |
+| `WORKDIR` | 设置工作目录 |
+| `ENV` | 设置环境变量 |
+| `ARG` | 设置构建参数 |
+| `EXPOSE` | 暴露端口 |
+| `VOLUME` | 创建数据卷挂载点 |
+| `USER` | 指定运行用户 |
+| `HEALTHCHECK` | 健康检查配置 |
+| `LABEL` | 添加元数据 |
+
+### Dockerfile 示例
+
+```dockerfile
+# 指定基础镜像
+FROM ubuntu:22.04
+
+# 设置 maintainer 标签
+LABEL maintainer="your.email@example.com"
+
+# 设置环境变量
+ENV DEBIAN_FRONTEND=noninteractive
+ENV APP_HOME=/app
+
+# 设置工作目录
+WORKDIR $APP_HOME
+
+# 复制文件（支持通配符）
+COPY requirements.txt .
+
+# 执行命令（每行创建一个新层，建议合并 RUN 指令）
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    pip3 install -r requirements.txt && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 复制应用代码
+COPY . .
+
+# 创建非 root 用户并切换
+RUN useradd -m appuser
+USER appuser
+
+# 暴露端口
+EXPOSE 8000
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# 容器启动命令（可被 docker run 后面的参数覆盖）
+CMD ["python3", "app.py"]
+```
+
+### 构建命令
+
+```bash
+# 基本构建
+docker build -t my-image .
+
+# 指定 Dockerfile 路径
+docker build -f Dockerfile.prod -t my-image:prod .
+
+# 使用构建参数
+docker build --build-arg NODE_ENV=production -t my-image .
+
+# 使用 BuildKit（更快的构建速度）
+DOCKER_BUILDKIT=1 docker build -t my-image .
+```
+
+## docker-compose.yaml
+
+Docker Compose 允许使用 YAML 文件来定义和管理多容器应用。
+
+### 常用配置项
+
+```yaml
+version: '3.8'
+
+services:
+  web:
+    # 使用已有镜像
+    image: nginx:alpine
+    # 或从 Dockerfile 构建
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      args:
+        - NODE_ENV=production
+
+    # 容器名称
+    container_name: my-web-container
+
+    # 端口映射
+    ports:
+      - "80:80"
+      - "443:443"
+
+    # 环境变量
+    environment:
+      - NODE_ENV=production
+      - API_KEY=${API_KEY}
+    # 或使用 env_file
+    env_file:
+      - .env
+
+    # 数据卷挂载
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - /var/log/nginx:/var/log/nginx
+    # 或命名数据卷
+    # volumes:
+    #   - data-volume:/data
+
+    # 网络配置
+    networks:
+      - frontend
+      - backend
+
+    # 依赖关系
+    depends_on:
+      - app
+      - db
+
+    # 重启策略
+    restart: unless-stopped
+
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build: ./app
+    networks:
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# 定义命名数据卷
+volumes:
+  postgres_data:
+  data-volume:
+
+# 定义网络
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true  # 内部网络，不连接外网
+```
+
+### Compose 常用命令
+
+```bash
+# 启动服务（后台运行）
+docker-compose up -d
+
+# 启动并重建容器
+docker-compose up -d --build
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs
+docker-compose logs -f app  # 跟踪特定服务日志
+
+# 停止服务
+docker-compose stop
+
+# 停止并删除容器、网络（保留数据卷）
+docker-compose down
+
+# 停止并删除容器、网络和数据卷
+docker-compose down -v
+
+# 重启服务
+docker-compose restart
+
+# 进入服务容器
+docker-compose exec app /bin/bash
+
+# 构建/重建服务
+docker-compose build
+docker-compose build --no-cache  # 不使用缓存
+```
 
 ## Docker 实践示例
 
@@ -290,7 +554,7 @@ curl http://localhost:3000
 
 ### 示例 5：使用 Docker Compose
 
-Docker Compose 允许你使用 YAML 文件来定义多容器应用。
+Docker Compose 允许使用 YAML 文件来定义多容器应用。
 
 1. 创建 `docker-compose.yml`：
 
@@ -362,448 +626,4 @@ docker-compose down
 2. **使用 Docker BuildKit**：启用 BuildKit 可以提高构建速度和缓存效率
 3. **容器健康检查**：使用 HEALTHCHECK 指令检查容器内应用的健康状态
 
-## 总结
-
-Docker 提供了一种轻量级、可移植的容器化解决方案，能够简化应用的开发、部署和管理。通过使用 Docker，你可以：
-
-- 确保开发、测试和生产环境的一致性
-- 快速部署和扩展应用
-- 节省服务器资源
-- 简化应用的打包和分发
-
-掌握 Docker 的基本概念和命令是现代软件开发的重要技能。通过实践上述示例，您可以快速上手 Docker 并在实际项目中应用这些知识。
-
-
-## 本地镜像
-
-docker 本地镜像
-
-## docker 网络
-
-docker 网络管理思路来自于虚拟机，把虚拟机中管理网络的思想移植过来，对于构建在虚拟机上的公有云来说，网络安全和高效是非常重要的。
-
-
-
-```sequence
-title: docker engine
-participant remote machine\nregistry\n（远程仓库） as a
-participant local machine\nimages\n（本地镜像） as b
-participant local machine\ncontainers\n（容器） as c
-
-note over a: repositories
-b->a: docker search images
-a->b: docker pull images
-b->b: docker images
-b->c: docker run image
-```
-
-# Docker Container Status
-
-```sequence
-participant Up as u
-participant Exited as e
-
-u->e: docker stop
-e->u: docker start
-```
-
-# Docker Volume
-
-```sequence
-participant local machine as l
-participant container as c
-note over l,c: volume share
-l->c: docker run -v localVolumePath:containerPath:rwo
-```
-
-
-
-# Docker Command-Line
-
-基础 docker 命令
-
-## docker info
-
-查看 docker 信息
-
-```bash
-Usage:  docker info [OPTIONS]
-
-Display system-wide information
-
-Options:
-  -f, --format string   Format the output using the given Go template
-```
-
-## docker search
-
-在 docker 远程仓库搜索镜像
-
-```bash
-Usage:  docker search [OPTIONS] TERM
-
-Search the Docker Hub for images
-
-Options:
-  -f, --filter filter   Filter output based on conditions provided
-      --format string   Pretty-print search using a Go template
-      --limit int       Max number of search results (default 25)
-      --no-trunc        Don't truncate output
-```
-
-## docker pull
-
-从 docker 远程仓库拉取镜像
-
-```bash
-Usage:  docker pull [OPTIONS] NAME[:TAG|@DIGEST]
-
-Pull an image or a repository from a registry
-
-Options:
-  -a, --all-tags                Download all tagged images in the repository
-      --disable-content-trust   Skip image verification (default true)
-      --platform string         Set platform if server is multi-platform
-                                capable
-  -q, --quiet                   Suppress verbose output
-```
-
-## docker images
-
-列出本地仓库的 docker 镜像
-
-```bash
-Usage:  docker images [OPTIONS] [REPOSITORY[:TAG]]
-
-List images
-
-Options:
-  -a, --all             Show all images (default hides intermediate images)
-      --digests         Show digests
-  -f, --filter filter   Filter output based on conditions provided
-      --format string   Pretty-print images using a Go template
-      --no-trunc        Don't truncate output
-  -q, --quiet           Only show image IDs
-```
-
-## docker tag
-
-创建一个镜像副本，以新的 repository 和 tag 命名
-
-```bash
-Usage:  docker tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]
-
-Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
-```
-
-## docker volume
-
-查看 docker 存储卷信息
-
-```bash
-Usage:  docker volume COMMAND
-
-Manage volumes
-
-Commands:
-  create      Create a volume
-  inspect     Display detailed information on one or more volumes
-  ls          List volumes
-  prune       Remove all unused local volumes
-  rm          Remove one or more volumes
-```
-
-## docker rmi
-
-从本地仓库中删除 docker 镜像
-
-```bash
-Usage:  docker rmi [OPTIONS] IMAGE [IMAGE...]
-
-Remove one or more images
-
-Options:
-  -f, --force      Force removal of the image
-      --no-prune   Do not delete untagged parents
-```
-
-## docker run
-
-利用 docker 镜像，启动一个 docker 容器
-
-```bash
-Usage:  docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
-
-Run a command in a new container
-
-Options:
-  ...
-  -d, --detach                         Run container in background and print container ID
-  -e, --env list                       Set environment variables
-  -p, --publish list                   Publish a container's port(s) to the host
-  -v, --volume list                    Bind mount a volume
-```
-
-## docker exec
-
-进入 docker 容器，启动某个命令
-
-```bash
-Usage:  docker exec [OPTIONS] CONTAINER COMMAND [ARG...]
-
-Run a command in a running container
-
-Options:
-  -d, --detach               Detached mode: run command in the background
-      --detach-keys string   Override the key sequence for detaching a
-                             container
-  -e, --env list             Set environment variables
-      --env-file list        Read in a file of environment variables
-  -i, --interactive          Keep STDIN open even if not attached
-      --privileged           Give extended privileges to the command
-  -t, --tty                  Allocate a pseudo-TTY
-  -u, --user string          Username or UID (format:
-                             <name|uid>[:<group|gid>])
-  -w, --workdir string       Working directory inside the container
-```
-
-## docker stop
-
-停止运行中的 docker 容器
-
-```bash
-Usage:  docker stop [OPTIONS] CONTAINER [CONTAINER...]
-
-Stop one or more running containers
-
-Options:
-  -t, --time int   Seconds to wait for stop before killing it (default 10)
-```
-
-## docker start
-
-启动停止运行的 docker 容器
-
-```bash
-Usage:  docker start [OPTIONS] CONTAINER [CONTAINER...]
-
-Start one or more stopped containers
-
-Options:
-  -a, --attach               Attach STDOUT/STDERR and forward signals
-      --detach-keys string   Override the key sequence for detaching a
-                             container
-  -i, --interactive          Attach container's STDIN
-```
-
-## docker restart
-
-重启停止运行的 docker 镜像
-
-```bash
-Usage:  docker restart [OPTIONS] CONTAINER [CONTAINER...]
-
-Restart one or more containers
-
-Options:
-  -t, --time int   Seconds to wait for stop before killing the container
-                   (default 10)
-```
-
-## docker rm
-
-删除运行中的 docker 容器
-
-```bash
-Usage:  docker rm [OPTIONS] CONTAINER [CONTAINER...]
-
-Remove one or more containers
-
-Options:
-  -f, --force     Force the removal of a running container (uses SIGKILL)
-  -l, --link      Remove the specified link
-  -v, --volumes   Remove anonymous volumes associated with the container
-```
-
-## docker build
-
-使用 Dockerfile 构建 docker 镜像
-
-```bash
-Usage:  docker build [OPTIONS] PATH | URL | -
-
-Build an image from a Dockerfile
-
-Options:
-  -f, --file string             Name of the Dockerfile (Default is 'PATH/Dockerfile')
-  -t, --tag list                Name and optionally a tag in the 'name:tag' format
-```
-
-## docker network
-
-组建和管理 docker 网络
-
-```bash
-Usage:  docker network COMMAND
-
-Manage networks
-
-Commands:
-  connect     Connect a container to a network
-  create      Create a network
-  disconnect  Disconnect a container from a network
-  inspect     Display detailed information on one or more networks
-  ls          List networks
-  prune       Remove all unused networks
-  rm          Remove one or more networks
-```
-
-# Docker-Compose Command-Line
-
-从 dockerfile 中建立镜像
-
-```bash
-apt install docker-compose
-```
-
-
-
-# Docker 实例
-
-## Nginx
-
-```bash
-# 创建一个 nginx 实例
-docker run --name nginxname -p 80:80 -d nginx
-# 进入容器
-docker exec -it nginx /bin/bash
-```
-
-## MySQL
-
-```bash
-docker pull mysql
-# 创建一个 mysql 实例
-# 方式 1.不持久化存储
-docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
-# 方式 2.持久化存储
-docker run --name mysql -p 3306:3306 -v /root/mysql/data:/var/lib/mysql -v /root/mysql/logs:/logs -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
-
-# 进入 mysql 容器，登录
-docker exec -it mysql bash
-mysql -u root -p
-```
-
-## PostgreSQL
-
-```bash
-docker pull postgres
-docker run --name postgresql -v /root/postgresql/data:/var/lib/postgresql/data -e POSTGRES_PASSWORD=root -d postgres:latest
-
-docker exec -it postgresql bash
-psql -U postgres
-
-docker start postgresql
-docker stop postgresql
-docker rm postgresql
-
-docker start pgadmin
-docker stop pgadmin
-```
-
-## Redis
-
-```bash
-# 创建一个 redis 实例
-docker run -itd --name redis -p 6379:6379 redis
-
-# 进入 redis 容器
-docker exec -it redis redis-cli
-# set key value
-# get key
-```
-
-## WordPress
-
-```bash
-# 在 mysql 创建 wordpress 用户，并设置授权
-mysql -u root -p
-CREATE USER 'wordpress'@'localhost' IDENTIFIED BY 'wordpress';
-CREATE DATABASE wordpress charset utf8;
-GRANT ALL ON wordpress.* TO 'wordpress'@'localhost';
-
-# 启动 wordpress
-docker run --name wordpress -p 80:80 -d wordpress -e WORDPRESS_DB_HOST=localhost WORDPRESS_DB_USER=wordpress WORDPRESS_DB_PASSWORD=wordpress WORDPRESS_DB_NAME=wrodpress WORDPRESS_TABLE_PREFIX=TB_
-```
-
-## Hadoop
-
-```bash
-# 单机版镜像，开发试用
-docker pull sequenceiq/hadoop-docker
-
-docker run -it sequenceiq/hadoop-docker:latest /etc/bootstrap.sh -bash --privileged=true
-# 50070 Hadoop Namenode UI端口
-# 50075 Hadoop Datanode UI端口
-# 8088 Yarn任务监控端口
-docker run -it -p 50070:50070 -p 8088:8088 -p 50075:50075 sequenceiq/hadoop-docker:latest /etc/bootstrap.sh -bash --privileged=true
-
-# Starting sshd:                                             [  OK  ]
-# Starting namenodes on [d27ab660f78c]
-# d27ab660f78c: starting namenode, logging to /usr/local/hadoop/logs/hadoop-root-namenode-d27ab660f78c.out
-# localhost: starting datanode, logging to /usr/local/hadoop/logs/hadoop-root-datanode-d27ab660f78c.out
-# Starting secondary namenodes [0.0.0.0]
-# 0.0.0.0: starting secondarynamenode, logging to /usr/local/hadoop/logs/hadoop-root-secondarynamenode-d27ab660f78c.out
-# starting yarn daemons
-# starting resourcemanager, logging to /usr/local/hadoop/logs/yarn--resourcemanager-d27ab660f78c.out
-# localhost: starting nodemanager, logging to /usr/local/hadoop/logs/yarn-root-nodemanager-d27ab660f78c.out
-
-cd /usr/local/hadoop/sbin
-./start-all.sh
-./mr-jobhistory-daemon.sh start historyserver
-
-# 回到Hadoop主目录cd /usr/local/hadoop，运行示例程序。
-# 这个示例程序的功能是将 input 文件夹中的所有文件作为输入，筛选当中符合正则表达式 dfs[a-z.]+ 的单词并统计出现的次数，最后输出结果到 output 文件夹中。
-bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.0.jar grep input output 'dfs[a-b.]+'
-
-# 查看输出结果
-bin/hdfs dfs -cat output/*
-```
-
-## ElasticSearch
-
-```bash
-docker pull elasticsearch:latest
-
-docker run -it elasticsearch
-```
-
-## Kibana
-
-```bash
-```
-
-
-
-## LogStash
-
-## Kafka
-
-
-
-# DockerFile
-
-## Nginx
-
-```dockerfile
-web:
-  image: nginx
-  volumes:
-   - ./templates:/etc/nginx/templates
-  ports:
-   - "8080:80"
-  environment:
-   - NGINX_HOST=foobar.com
-   - NGINX_PORT=80
-```
 

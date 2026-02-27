@@ -145,3 +145,11 @@ TUI 提供了直观的终端界面，用于在项目中与 LLM 协作。
 ```
 /compact
 ```
+
+## opencode cli 常用命令
+
+```bash
+# 导出 session 
+opencode export session_id > file_name
+
+```
