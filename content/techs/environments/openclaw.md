@@ -51,6 +51,20 @@ openclaw gateway status
 openclaw dashboard
 ```
 
+## 更新
+
+```bash
+# 或者通过命令行安装
+openclaw update
+openclaw doctor
+
+# 或者重新运行安装程序
+curl -fsSL https://openclaw.ai/install.sh | bash
+
+# 或者有国内 npm 源
+npm install -g openclaw@latest
+```
+
 ## 访问方式
 
 ### 远程服务器访问 dashboard
@@ -347,6 +361,7 @@ openclaw skills disable <skill-name>
 
 
 ### 通道管理
+
 ```bash
 # 列出所有通道
 openclaw channels list
@@ -359,6 +374,14 @@ openclaw channels enable <channel-name>
 
 # 禁用通道
 openclaw channels disable <channel-name>
+```
+
+## openclaw tui
+
+### 调整界面尺寸
+
+```bash
+stty rows 40 cols 120
 ```
 
 ## 个人理解

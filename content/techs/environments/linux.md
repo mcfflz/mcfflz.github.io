@@ -61,100 +61,120 @@ linux 核心目录及简要介绍：
 这种结构将静态的命令、动态的数据、用户的文件、系统的配置清晰地分离。对于普通用户，最常接触的是 `/home` 下的个人目录和 `/usr` 下的应用程序；而系统管理员则需要关注 `/etc`, `/var/log` 等目录。
 
 
-## linux 用户与用户组
-
-### /etc/group
-
-[Linux /etc/group文件解析（超详细） (biancheng.net)](http://c.biancheng.net/view/841.html)
+## linux 用户和用户组
 
 ```bash
-# 组名：密码：GID：该用户组中的用户列表
-# 示例如下
-root:x:0:
-daemon:x:1:
-...
-admin:x:1000:
+# 基本创建
+sudo useradd username
+
+# 创建用户并指定家目录
+sudo useradd -m username
+
+# 创建用户并设置 home 目录路径
+sudo useradd -m -d /home/customdir username
+
+# 创建用户并指定登录shell
+sudo useradd -m -s /bin/bash username
+
+# 创建用户并指定UID
+sudo useradd -m -u 1001 username
+
+# 创建用户并指定主组
+sudo useradd -m -g groupname username
+
+# 创建用户并指定附加组
+sudo useradd -m -G group1,group2 username
+
+# 创建系统用户（无家目录，不登录）
+sudo useradd -r -s /sbin/nologin username
+
+# 删除用户但保留家目录
+sudo userdel username
+
+# 删除用户及家目录
+sudo userdel -r username
+
+# 强制删除（即使用户已登录）
+sudo userdel -f -r username
 ```
 
-### /etc/passwd
-
-[Linux /etc/passwd内容解释（超详细） (biancheng.net)](http://c.biancheng.net/view/839.html)
+### 用户信息查询
 
 ```bash
-# 用户名：密码：UID（用户ID）：GID（组ID）：描述性信息：主目录：默认Shell
-# 示例如下
-root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-...
-admin:x:1000:1000::/home/admin:/bin/bash
+# 查看用户信息
+id username
+whoami              # 当前用户
+who                 # 登录用户
+w                   # 详细信息
+last username       # 用户登录历史
+finger username     # 用户详细信息
+
+# 查看用户配置
+cat /etc/passwd
+grep username /etc/passwd
+cat /etc/shadow
 ```
 
-### /etc/shadow
-
-[Linux /etc/shadow（影子文件）内容解析（超详细） (biancheng.net)](http://c.biancheng.net/view/840.html)
+### 用户组管理
 
 ```bash
-# 用户名：加密密码：最后一次修改时间：最小修改时间间隔：密码有效期：密码需要变更前的警告天数：密码过期后的宽限时间：账号失效时间：保留字段
-# 示例如下
-root:$6$O7sgR5mfuCpFKbe1$VUUzqM/IvDBlqV3CGHV3/FG3mfWw2ngYQFR39wrQVLayoW75ATUf95gq8aJB4xGtAEDtjsxm68.o3veEz5msn.:18841:0:99999:7:::
-# aliyunServer:Psbc@123456
-daemon:*:18375:0:99999:7:::
-...
-admin:$6$o4Ui0hCtBUTUw16g$00PXoA4/uN00VFkmp3bnVbBIrqyBp0IaFlLS/ECIPEYgUIlpMY37cEeN1pGXfWmp7QgUth9mWk8g4dwv4d16h/:18846:0:99999:7:::
-# aliyunServer:admin1234
+# 将用户添加到附加组
+sudo usermod -aG groupname username
+
+# 更改用户的主组
+sudo usermod -g newprimarygroup username
+
+# 查看用户所属组
+groups username
+id username
 ```
 
-### /etc/gshadow
-
-[Linux /etc/gshadow文件内容解析 (biancheng.net)](http://c.biancheng.net/view/842.html)
+### 密码管理
 
 ```bash
-# 组名：加密密码：组管理员：组附加用户列表
-# 示例如下
-root:*::
-daemon:*::
-...
-admin:!::
+# 设置用户密码
+sudo passwd username
+
+# 锁定用户密码（禁止登录）
+sudo passwd -l username
+
+# 解锁用户密码
+sudo passwd -u username
+
+# 删除用户密码（允许无密码登录）
+sudo passwd -d username```
+
 ```
 
-### 创建用户组
-
-[Linux groupadd命令：添加用户组 (biancheng.net)](http://c.biancheng.net/view/856.html)
+### 修改用户属性
 
 ```bash
-groupadd [options] group
-options:
-	-p --password
-	-r --system
+# 修改用户名
+sudo usermod -l newname oldname
+
+# 修改用户家目录
+sudo usermod -d /new/home/dir username
+
+# 移动家目录内容到新位置
+sudo usermod -d /new/home/dir -m username
+
+# 修改登录shell
+sudo usermod -s /bin/bash username
+
+# 修改UID
+sudo usermod -u 1002 username
+
+# 锁定用户账户
+sudo usermod -L username
+
+# 解锁用户账户
+sudo usermod -U username
+
+# 修改用户过期日期
+sudo usermod -e 2025-12-31 username
 ```
 
-### 创建用户
 
-[Linux useradd命令详解：添加新的系统用户 (biancheng.net)](http://c.biancheng.net/view/844.html)
-
-```bash
-useradd [options]
-options:
-	-b --base-dir
-	-d --home-dir
-	-g --gid
-	-G --groups
-	-p --password
-	-r --system
-	-s --shell
-```
-
-### 修改用户密码
-
-```bash
-passwd [options] username
-options:
-	-l --lock
-	-u --unlock
-
-# 有sudo权限可以设置root密码
-sudo passwd root
-```
 
 # linux 硬盘挂载
 
@@ -417,10 +437,22 @@ hostname
 ## ps 查看进程信息
 
 ```bash
-# 显示当前进程占用资源的快照
-ps -a            - 列出所有运行中/激活进程
-ps -ef | grep     - 列出需要进程
-ps -aux          - 显示进程信息，包括无终端的（x）和针对用户（u）的进程：如USER, PID, %CPU, %MEM等
+# 查看系统所有进程的详细信息，这是最常用的命令
+# a：显示所有用户的进程。
+# u：以用户为主的格式显示。
+# x：显示没有控制终端的进程（如后台服务）。
+ps -aux
+
+# 以完整格式列表显示所有进程，能清晰看到父进程ID（PPID）
+# e：显示所有进程。
+# f：显示完整格式列表。
+ps -ef
+
+# 显示进程层次关系
+ps -ef --forest
+
+# 查找特定进程
+ps -aux | grep <name>
 ```
 
 ## top 查看进程信息

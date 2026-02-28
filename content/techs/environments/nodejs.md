@@ -23,14 +23,6 @@ weight: 1                     # 内容权重（排序用）
 
 Node.js 不是一个 JavaScript 框架，而是一个 JavaScript 运行时环境。它让 JavaScript 可以脱离浏览器运行在服务器端，执行各种后端任务。
 
-Node.js 拥有以下特点：
-- 事件驱动 (Event Driven)
-- 非阻塞 I/O (Non-blocking I/O)
-- 单线程 (Single Thread)
-- 跨平台 (Cross-platform)
-
-这些特性使 Node.js 非常适合构建 I/O 密集型的应用程序，如 Web 服务器、实时应用等。
-
 Node.js 具有以下优势：
 
 1. **统一技术栈**：前后端都可以使用 JavaScript，减少语言切换成本
@@ -176,6 +168,45 @@ npm view <package-name> version
   "express": "^4.18.2",  # 允许更新补丁和次要版本
   "lodash": "~4.17.21"   # 只允许更新补丁版本
 }
+```
+
+
+### 配置管理
+
+```bash
+# 查看所有配置项（包括默认值）
+npm config list
+
+# 查看全局配置
+npm config list -g
+
+# 获取某个特定配置项的值
+npm config get <key>
+# 示例：获取当前注册表地址
+npm config get registry
+
+# 设置一个配置项
+npm config set <key> <value>
+
+# 删除一个配置项
+npm config delete <key>
+
+# 将配置恢复为默认值
+npm config delete <key> -g
+
+# 设置全局配置项
+npm config set <key> <value> -g
+# 示例：设置全局安装路径
+npm config set prefix ~/.npm-global -g
+
+# 在项目中编辑本地.npmrc文件
+npm config edit
+
+# 编辑全局npmrc文件
+npm config edit -g
+
+# 设置包安装时的认证令牌（常用于私有仓库）
+npm config set //<registry-domain>/:_authToken <your-token>
 ```
 
 ### 其他命令
