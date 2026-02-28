@@ -10,140 +10,24 @@ draft: false
 # bookSearchExclude: false      # 是否从搜索结果中排除（默认false）
 # params:                       # 自定义参数
 #   maths: true                 # 数学公式支持
-weight: 1                     # 内容权重（排序用）
+# weight: 1                     # 内容权重（排序用）
 ---
 
 # Docker
 
 ## 参考资料
 
+[docker ubuntu install](https://docs.docker.com/engine/install/ubuntu/#install-from-a-package)
 
+## 概述
 
-# Docker Install
+Docker 是一个应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中，然后发布到任何流行的 Linux 机器上。容器是完全使用沙箱机制，相互之间不会有任何接口。
 
-Ubuntu
+Docker 解决了"代码在我机器上能跑起来"的问题，通过容器化技术确保应用在不同环境中具有一致的行为。Docker 主要有三个核心概念：
 
-## storage drivers
-
-Docker Engine on Ubuntu supports `overlay2`, `aufs` and `btrfs` storage drivers.
-
-Docker Engine uses the `overlay2` storage driver by default. If you need to use `aufs` instead, you need to configure it manually. See [use the AUFS storage driver](https://docs.docker.com/storage/storagedriver/aufs-driver/)
-
-docker 有两个非常重要的概念，分别是镜像（image）与容器（container）。镜像和容器本质上都是一个文件系统，它们唯一的不同，就是镜像是只读的，而容器是可读可写的。
-
-## Installation methods
-
-You can install Docker Engine in different ways, depending on your needs:
-
-- Most users [set up Docker’s repositories](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) and install from them, for ease of installation and upgrade tasks. This is the recommended approach.
-
-    ```bash
-    apt-get update
-    
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-    
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    
-    apt-get update
-    apt-get install docker-ce docker-ce-cli containerd.io
-    
-    apt-cache madison docker-ce
-    
-    VERSION_STRING=????;sudo apt-get install docker-ce=$VERSION_STRING docker-ce-cli=$VERSION_STRING containerd.io
-    ```
-
-- Some users download the DEB package and [install it manually](https://docs.docker.com/engine/install/ubuntu/#install-from-a-package) and manage upgrades completely manually. This is useful in situations such as installing Docker on air-gapped systems with no access to the internet.
-
-- In testing and development environments, some users choose to use automated [convenience scripts](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script) to install Docker.
-
-## docker run hello-world
-
-```bash
-root@iZ2ze49dgr09ifxfj9lirgZ:~# docker run hello-world
-Unable to find image 'hello-world:latest' locally
-
-latest: Pulling from library/hello-world
-2db29710123e: Pull complete
-Digest: sha256:975f4b14f326b05db86e16de00144f9c12257553bba9484fed41f9b6f2257800
-Status: Downloaded newer image for hello-world:latest
-
-Hello from Docker!
-This message shows that your installation appears to be working correctly.
-
-To generate this message, Docker took the following steps:
- 1. The Docker client contacted the Docker daemon.
- 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
-    (amd64)
- 3. The Docker daemon created a new container from that image which runs the
-    executable that produces the output you are currently reading.
- 4. The Docker daemon streamed that output to the Docker client, which sent it
-    to your terminal.
-
-To try something more ambitious, you can run an Ubuntu container with:
- $ docker run -it ubuntu bash
-
-Share images, automate workflows, and more with a free Docker ID:
- https://hub.docker.com/
-
-For more examples and ideas, visit:
- https://docs.docker.com/get-started/
-```
-
-## Manage Docker as a non-root user
-
-The Docker daemon binds to a Unix socket instead of a TCP port. By default that Unix socket is owned by the user `root` and other users can only access it using `sudo`. The Docker daemon always runs as the `root` user.
-
-If you don’t want to preface the `docker` command with `sudo`, create a Unix group called `docker` and add users to it. When the Docker daemon starts, it creates a Unix socket accessible by members of the `docker` group.
-
-[Post-installation steps for Linux | Docker Documentation](https://docs.docker.com/engine/install/linux-postinstall/)
-
-# Docker 更换国内镜像源
-
-1. 查找并编辑配置文件
-2. 重启 docker 服务，注意：会停止运行中的 docker 镜像
-3. 使用 docker info 查看 docker 的镜像源是否变更
-
-```bash
-# 如果没有文件，直接新建
-vim /etc/docker/daemon.json
-```
-
-```json
-# 编辑内容，镜像可以更换为任意国内镜像源
-{
- "registry-mirrors" : [
-   "https://docker.mirrors.ustc.edu.cn/",
-   "https://mirror.ccs.tencentyun.com",
-   "https://hub-mirror.c.163.com/",
-   "http://registry.docker-cn.com"
- ],
- "insecure-registries" : [
-   "registry.docker-cn.com",
-   "docker.mirrors.ustc.edu.cn"
- ],
- "debug" : true,
- "experimental" : true
-}
-```
-
-```bash
-systemctl restart docker.service
-docker info
-```
-
-
-
-# Docker 相关概念
-
-## 本地镜像
-
-docker 本地镜像
-
-## docker 网络
-
-docker 网络管理思路来自于虚拟机，把虚拟机中管理网络的思想移植过来，对于构建在虚拟机上的公有云来说，网络安全和高效是非常重要的。
-
-
+- **镜像（Image）**：Docker 镜像是一个特殊的文件系统，除了提供容器运行时必需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数。镜像是只读的。
+- **容器（Container）**：容器是从镜像创建的运行实例。它可以被启动、开始、停止、删除。每个容器都是相互隔离的、保证安全的平台。
+- **仓库（Repository）**：仓库是集中存放镜像文件的场所。Docker Hub 是官方提供的公共仓库，用户可以上传自己的镜像，也可以下载他人分享的镜像。
 
 ```sequence
 title: docker engine
@@ -158,413 +42,588 @@ b->b: docker images
 b->c: docker run image
 ```
 
-# Docker Container Status
+## 安装
 
-```sequence
-participant Up as u
-participant Exited as e
-
-u->e: docker stop
-e->u: docker start
-```
-
-# Docker Volume
-
-```sequence
-participant local machine as l
-participant container as c
-note over l,c: volume share
-l->c: docker run -v localVolumePath:containerPath:rwo
-```
-
-
-
-# Docker Command-Line
-
-基础 docker 命令
-
-## docker info
-
-查看 docker 信息
+环境：tencentcloud Ubuntu Server 24.04 LTS 64bit
 
 ```bash
-Usage:  docker info [OPTIONS]
+# 参考 docker 官方安装指南 https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+# 更新系统命令并安装依赖
+sudo apt update
+sudo apt install ca-certificates curl
 
-Display system-wide information
+# 创建密钥目录并下载 Docker GPG 密钥
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-Options:
-  -f, --format string   Format the output using the given Go template
+# 添加 Docker APT 仓库并更新软件源
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt update
+
+# 安装 docker 核心组件
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 启动 docker 服务
+sudo systemctl status docker
+
+# 更换镜像源
+sudo mkdir -p /etc/docker
+sudo vim /etc/docker/daemon.json
+{
+  "registry-mirrors": [
+    "https://mirror.ccs.tencentyun.com"
+  ]
+}
+sudo systemctl daemon-reload
+sudo docker info | grep "Registry Mirrors" -A 3
+sudo systemctl restart docker
+
+# 验证
+sudo docker run hello-world
 ```
 
-## docker search
+## docker cli 常用命令
 
-在 docker 远程仓库搜索镜像
+### 镜像相关命令
+
+- `docker images` - 列出本地所有镜像
+- `docker search <keyword>` - 在 Docker Hub 搜索镜像
+- `docker pull <image>` - 从仓库拉取镜像
+- `docker push <image>` - 推送镜像到仓库
+- `docker rmi <image>` - 删除本地镜像
+- `docker build -t <name> .` - 使用当前目录下的 Dockerfile 构建镜像
+
+### 容器相关命令
+
+- `docker ps` - 列出正在运行的容器
+- `docker ps -a` - 列出所有容器（包括已停止的）
+- `docker run <image>` - 运行容器
+- `docker start <container>` - 启动已停止的容器
+- `docker stop <container>` - 停止运行中的容器
+- `docker restart <container>` - 重启容器
+- `docker rm <container>` - 删除容器
+- `docker exec -it <container> /bin/bash` - 进入容器执行命令
+
+### 其他常用命令
+
+- `docker logs <container>` - 查看容器日志
+- `docker stats` - 查看容器资源使用情况
+- `docker inspect <container>` - 查看容器详细信息
+- `docker volume` - 管理数据卷
+- `docker network` - 管理网络
+- `docker system prune` - 清理未使用的数据（镜像、容器、网络、数据卷）
+
+### docker run 常用参数
+
+- `-d` - 后台运行容器
+- `-it` - 交互式运行容器
+- `-p <host_port>:<container_port>` - 端口映射
+- `-v <host_path>:<container_path>` - 数据卷挂载
+- `-e KEY=VALUE` - 设置环境变量
+- `--name <name>` - 指定容器名称
+- `--rm` - 容器退出时自动删除
+
+## docker 网络
+
+Docker 网络管理思路来自于虚拟机，把虚拟机中管理网络的思想移植过来，对于构建在虚拟机上的公有云来说，网络安全和高效是非常重要的。
+
+### Docker 网络驱动类型
+
+- **bridge（网桥模式）**：默认网络驱动，容器通过 docker0 虚拟网桥连接，每个容器有独立的 IP
+- **host（主机模式）**：容器直接使用主机网络，没有独立的 IP，性能更好但隔离性差
+- **none（无网络）**：容器有独立的 Network Namespace，但不进行任何网络配置
+- **container（容器共享）**：新创建的容器与一个已存在的容器共享同一个 Network Namespace
+- **overlay（覆盖网络）**：用于 Docker Swarm 跨主机通信
+- **macvlan**：为容器分配 MAC 地址，使容器看起来像物理设备
+
+### 网络操作命令
 
 ```bash
-Usage:  docker search [OPTIONS] TERM
+# 列出所有网络
+docker network ls
 
-Search the Docker Hub for images
+# 创建自定义网络
+docker network create my-network
 
-Options:
-  -f, --filter filter   Filter output based on conditions provided
-      --format string   Pretty-print search using a Go template
-      --limit int       Max number of search results (default 25)
-      --no-trunc        Don't truncate output
+# 查看网络详情
+docker network inspect my-network
+
+# 容器连接到网络
+docker network connect my-network <container>
+
+# 容器断开网络
+docker network disconnect my-network <container>
+
+# 删除网络
+docker network rm my-network
 ```
 
-## docker pull
-
-从 docker 远程仓库拉取镜像
+### 使用示例
 
 ```bash
-Usage:  docker pull [OPTIONS] NAME[:TAG|@DIGEST]
+# 使用自定义 bridge 网络运行容器
+docker run --name web --network my-network -p 8080:80 nginx
+docker run --name app --network my-network my-app
 
-Pull an image or a repository from a registry
+# 使用 host 网络（容器没有独立 IP，直接使用主机端口）
+docker run --network host nginx
 
-Options:
-  -a, --all-tags                Download all tagged images in the repository
-      --disable-content-trust   Skip image verification (default true)
-      --platform string         Set platform if server is multi-platform
-                                capable
-  -q, --quiet                   Suppress verbose output
+# 容器共享网络（新容器与已存在容器共享 network namespace）
+docker run --network container:existing-container alpine
 ```
 
-## docker images
-
-列出本地仓库的 docker 镜像
-
-```bash
-Usage:  docker images [OPTIONS] [REPOSITORY[:TAG]]
-
-List images
-
-Options:
-  -a, --all             Show all images (default hides intermediate images)
-      --digests         Show digests
-  -f, --filter filter   Filter output based on conditions provided
-      --format string   Pretty-print images using a Go template
-      --no-trunc        Don't truncate output
-  -q, --quiet           Only show image IDs
-```
-
-## docker tag
-
-创建一个镜像副本，以新的 repository 和 tag 命名
-
-```bash
-Usage:  docker tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]
-
-Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
-```
-
-## docker volume
-
-查看 docker 存储卷信息
-
-```bash
-Usage:  docker volume COMMAND
-
-Manage volumes
-
-Commands:
-  create      Create a volume
-  inspect     Display detailed information on one or more volumes
-  ls          List volumes
-  prune       Remove all unused local volumes
-  rm          Remove one or more volumes
-```
-
-## docker rmi
-
-从本地仓库中删除 docker 镜像
-
-```bash
-Usage:  docker rmi [OPTIONS] IMAGE [IMAGE...]
-
-Remove one or more images
-
-Options:
-  -f, --force      Force removal of the image
-      --no-prune   Do not delete untagged parents
-```
-
-## docker run
-
-利用 docker 镜像，启动一个 docker 容器
-
-```bash
-Usage:  docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
-
-Run a command in a new container
-
-Options:
-  ...
-  -d, --detach                         Run container in background and print container ID
-  -e, --env list                       Set environment variables
-  -p, --publish list                   Publish a container's port(s) to the host
-  -v, --volume list                    Bind mount a volume
-```
-
-## docker exec
-
-进入 docker 容器，启动某个命令
-
-```bash
-Usage:  docker exec [OPTIONS] CONTAINER COMMAND [ARG...]
-
-Run a command in a running container
-
-Options:
-  -d, --detach               Detached mode: run command in the background
-      --detach-keys string   Override the key sequence for detaching a
-                             container
-  -e, --env list             Set environment variables
-      --env-file list        Read in a file of environment variables
-  -i, --interactive          Keep STDIN open even if not attached
-      --privileged           Give extended privileges to the command
-  -t, --tty                  Allocate a pseudo-TTY
-  -u, --user string          Username or UID (format:
-                             <name|uid>[:<group|gid>])
-  -w, --workdir string       Working directory inside the container
-```
-
-## docker stop
-
-停止运行中的 docker 容器
-
-```bash
-Usage:  docker stop [OPTIONS] CONTAINER [CONTAINER...]
-
-Stop one or more running containers
-
-Options:
-  -t, --time int   Seconds to wait for stop before killing it (default 10)
-```
-
-## docker start
-
-启动停止运行的 docker 容器
-
-```bash
-Usage:  docker start [OPTIONS] CONTAINER [CONTAINER...]
-
-Start one or more stopped containers
-
-Options:
-  -a, --attach               Attach STDOUT/STDERR and forward signals
-      --detach-keys string   Override the key sequence for detaching a
-                             container
-  -i, --interactive          Attach container's STDIN
-```
-
-## docker restart
-
-重启停止运行的 docker 镜像
-
-```bash
-Usage:  docker restart [OPTIONS] CONTAINER [CONTAINER...]
-
-Restart one or more containers
-
-Options:
-  -t, --time int   Seconds to wait for stop before killing the container
-                   (default 10)
-```
-
-## docker rm
-
-删除运行中的 docker 容器
-
-```bash
-Usage:  docker rm [OPTIONS] CONTAINER [CONTAINER...]
-
-Remove one or more containers
-
-Options:
-  -f, --force     Force the removal of a running container (uses SIGKILL)
-  -l, --link      Remove the specified link
-  -v, --volumes   Remove anonymous volumes associated with the container
-```
-
-## docker build
-
-使用 Dockerfile 构建 docker 镜像
-
-```bash
-Usage:  docker build [OPTIONS] PATH | URL | -
-
-Build an image from a Dockerfile
-
-Options:
-  -f, --file string             Name of the Dockerfile (Default is 'PATH/Dockerfile')
-  -t, --tag list                Name and optionally a tag in the 'name:tag' format
-```
-
-## docker network
-
-组建和管理 docker 网络
-
-```bash
-Usage:  docker network COMMAND
-
-Manage networks
-
-Commands:
-  connect     Connect a container to a network
-  create      Create a network
-  disconnect  Disconnect a container from a network
-  inspect     Display detailed information on one or more networks
-  ls          List networks
-  prune       Remove all unused networks
-  rm          Remove one or more networks
-```
-
-# Docker-Compose Command-Line
-
-从 dockerfile 中建立镜像
-
-```bash
-apt install docker-compose
-```
-
-
-
-# Docker 实例
-
-## Nginx
-
-```bash
-# 创建一个 nginx 实例
-docker run --name nginxname -p 80:80 -d nginx
-# 进入容器
-docker exec -it nginx /bin/bash
-```
-
-## MySQL
-
-```bash
-docker pull mysql
-# 创建一个 mysql 实例
-# 方式 1.不持久化存储
-docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
-# 方式 2.持久化存储
-docker run --name mysql -p 3306:3306 -v /root/mysql/data:/var/lib/mysql -v /root/mysql/logs:/logs -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
-
-# 进入 mysql 容器，登录
-docker exec -it mysql bash
-mysql -u root -p
-```
-
-## PostgreSQL
-
-```bash
-docker pull postgres
-docker run --name postgresql -v /root/postgresql/data:/var/lib/postgresql/data -e POSTGRES_PASSWORD=root -d postgres:latest
-
-docker exec -it postgresql bash
-psql -U postgres
-
-docker start postgresql
-docker stop postgresql
-docker rm postgresql
-
-docker start pgadmin
-docker stop pgadmin
-```
-
-## Redis
-
-```bash
-# 创建一个 redis 实例
-docker run -itd --name redis -p 6379:6379 redis
-
-# 进入 redis 容器
-docker exec -it redis redis-cli
-# set key value
-# get key
-```
-
-## WordPress
-
-```bash
-# 在 mysql 创建 wordpress 用户，并设置授权
-mysql -u root -p
-CREATE USER 'wordpress'@'localhost' IDENTIFIED BY 'wordpress';
-CREATE DATABASE wordpress charset utf8;
-GRANT ALL ON wordpress.* TO 'wordpress'@'localhost';
-
-# 启动 wordpress
-docker run --name wordpress -p 80:80 -d wordpress -e WORDPRESS_DB_HOST=localhost WORDPRESS_DB_USER=wordpress WORDPRESS_DB_PASSWORD=wordpress WORDPRESS_DB_NAME=wrodpress WORDPRESS_TABLE_PREFIX=TB_
-```
-
-## Hadoop
-
-```bash
-# 单机版镜像，开发试用
-docker pull sequenceiq/hadoop-docker
-
-docker run -it sequenceiq/hadoop-docker:latest /etc/bootstrap.sh -bash --privileged=true
-# 50070 Hadoop Namenode UI端口
-# 50075 Hadoop Datanode UI端口
-# 8088 Yarn任务监控端口
-docker run -it -p 50070:50070 -p 8088:8088 -p 50075:50075 sequenceiq/hadoop-docker:latest /etc/bootstrap.sh -bash --privileged=true
-
-# Starting sshd:                                             [  OK  ]
-# Starting namenodes on [d27ab660f78c]
-# d27ab660f78c: starting namenode, logging to /usr/local/hadoop/logs/hadoop-root-namenode-d27ab660f78c.out
-# localhost: starting datanode, logging to /usr/local/hadoop/logs/hadoop-root-datanode-d27ab660f78c.out
-# Starting secondary namenodes [0.0.0.0]
-# 0.0.0.0: starting secondarynamenode, logging to /usr/local/hadoop/logs/hadoop-root-secondarynamenode-d27ab660f78c.out
-# starting yarn daemons
-# starting resourcemanager, logging to /usr/local/hadoop/logs/yarn--resourcemanager-d27ab660f78c.out
-# localhost: starting nodemanager, logging to /usr/local/hadoop/logs/yarn-root-nodemanager-d27ab660f78c.out
-
-cd /usr/local/hadoop/sbin
-./start-all.sh
-./mr-jobhistory-daemon.sh start historyserver
-
-# 回到Hadoop主目录cd /usr/local/hadoop，运行示例程序。
-# 这个示例程序的功能是将 input 文件夹中的所有文件作为输入，筛选当中符合正则表达式 dfs[a-z.]+ 的单词并统计出现的次数，最后输出结果到 output 文件夹中。
-bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.0.jar grep input output 'dfs[a-b.]+'
-
-# 查看输出结果
-bin/hdfs dfs -cat output/*
-```
-
-## ElasticSearch
-
-```bash
-docker pull elasticsearch:latest
-
-docker run -it elasticsearch
-```
-
-## Kibana
-
-```bash
-```
-
-
-
-## LogStash
-
-## Kafka
-
-
-
-# DockerFile
-
-## Nginx
+## Dockerfile
+
+Dockerfile 是一个用来构建 Docker 镜像的文本文件，包含了一系列构建镜像所需的指令。
+
+### 常用指令
+
+| 指令 | 说明 |
+|------|------|
+| `FROM` | 指定基础镜像 |
+| `RUN` | 执行命令（构建时） |
+| `CMD` | 容器启动时执行的命令（可被覆盖） |
+| `ENTRYPOINT` | 容器启动时执行的命令（不可被覆盖） |
+| `COPY` | 复制文件到镜像 |
+| `ADD` | 复制文件（支持 URL 和解压） |
+| `WORKDIR` | 设置工作目录 |
+| `ENV` | 设置环境变量 |
+| `ARG` | 设置构建参数 |
+| `EXPOSE` | 暴露端口 |
+| `VOLUME` | 创建数据卷挂载点 |
+| `USER` | 指定运行用户 |
+| `HEALTHCHECK` | 健康检查配置 |
+| `LABEL` | 添加元数据 |
+
+### Dockerfile 示例
 
 ```dockerfile
-web:
-  image: nginx
-  volumes:
-   - ./templates:/etc/nginx/templates
-  ports:
-   - "8080:80"
-  environment:
-   - NGINX_HOST=foobar.com
-   - NGINX_PORT=80
+# 指定基础镜像
+FROM ubuntu:22.04
+
+# 设置 maintainer 标签
+LABEL maintainer="your.email@example.com"
+
+# 设置环境变量
+ENV DEBIAN_FRONTEND=noninteractive
+ENV APP_HOME=/app
+
+# 设置工作目录
+WORKDIR $APP_HOME
+
+# 复制文件（支持通配符）
+COPY requirements.txt .
+
+# 执行命令（每行创建一个新层，建议合并 RUN 指令）
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    pip3 install -r requirements.txt && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 复制应用代码
+COPY . .
+
+# 创建非 root 用户并切换
+RUN useradd -m appuser
+USER appuser
+
+# 暴露端口
+EXPOSE 8000
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# 容器启动命令（可被 docker run 后面的参数覆盖）
+CMD ["python3", "app.py"]
 ```
+
+### 构建命令
+
+```bash
+# 基本构建
+docker build -t my-image .
+
+# 指定 Dockerfile 路径
+docker build -f Dockerfile.prod -t my-image:prod .
+
+# 使用构建参数
+docker build --build-arg NODE_ENV=production -t my-image .
+
+# 使用 BuildKit（更快的构建速度）
+DOCKER_BUILDKIT=1 docker build -t my-image .
+```
+
+## docker-compose.yaml
+
+Docker Compose 允许使用 YAML 文件来定义和管理多容器应用。
+
+### 常用配置项
+
+```yaml
+version: '3.8'
+
+services:
+  web:
+    # 使用已有镜像
+    image: nginx:alpine
+    # 或从 Dockerfile 构建
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      args:
+        - NODE_ENV=production
+
+    # 容器名称
+    container_name: my-web-container
+
+    # 端口映射
+    ports:
+      - "80:80"
+      - "443:443"
+
+    # 环境变量
+    environment:
+      - NODE_ENV=production
+      - API_KEY=${API_KEY}
+    # 或使用 env_file
+    env_file:
+      - .env
+
+    # 数据卷挂载
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - /var/log/nginx:/var/log/nginx
+    # 或命名数据卷
+    # volumes:
+    #   - data-volume:/data
+
+    # 网络配置
+    networks:
+      - frontend
+      - backend
+
+    # 依赖关系
+    depends_on:
+      - app
+      - db
+
+    # 重启策略
+    restart: unless-stopped
+
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build: ./app
+    networks:
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# 定义命名数据卷
+volumes:
+  postgres_data:
+  data-volume:
+
+# 定义网络
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true  # 内部网络，不连接外网
+```
+
+### Compose 常用命令
+
+```bash
+# 启动服务（后台运行）
+docker-compose up -d
+
+# 启动并重建容器
+docker-compose up -d --build
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs
+docker-compose logs -f app  # 跟踪特定服务日志
+
+# 停止服务
+docker-compose stop
+
+# 停止并删除容器、网络（保留数据卷）
+docker-compose down
+
+# 停止并删除容器、网络和数据卷
+docker-compose down -v
+
+# 重启服务
+docker-compose restart
+
+# 进入服务容器
+docker-compose exec app /bin/bash
+
+# 构建/重建服务
+docker-compose build
+docker-compose build --no-cache  # 不使用缓存
+```
+
+## Docker 实践示例
+
+### 示例 1：运行 Nginx 服务器
+
+```bash
+# 拉取 Nginx 镜像
+docker pull nginx
+
+# 运行 Nginx 容器，将主机 8080 端口映射到容器 80 端口
+docker run --name my-nginx -p 8080:80 -d nginx
+
+# 查看运行中的容器
+docker ps
+
+# 浏览器访问 http://localhost:8080 即可看到 Nginx 默认页面
+
+# 停止并删除容器
+docker stop my-nginx
+docker rm my-nginx
+```
+
+### 示例 2：运行 MySQL 数据库
+
+```bash
+# 拉取 MySQL 镜像
+docker pull mysql:8.0
+
+# 运行 MySQL 容器（持久化存储）
+docker run --name mysql-container \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=testdb \
+  -p 3306:3306 \
+  -v mysql-data:/var/lib/mysql \
+  -d mysql:8.0
+
+# 进入 MySQL 容器
+docker exec -it mysql-container mysql -u root -p
+
+# 停止 MySQL 容器
+docker stop mysql-container
+```
+
+### 示例 3：运行 Redis 缓存
+
+```bash
+# 拉取并运行 Redis
+docker run --name my-redis -p 6379:6379 -d redis
+
+# 连接到 Redis
+docker exec -it my-redis redis-cli
+
+# 设置和获取值
+SET mykey "Hello Docker"
+GET mykey
+
+# 停止并删除 Redis 容器
+docker stop my-redis
+docker rm my-redis
+```
+
+### 示例 4：使用 Dockerfile 构建自定义镜像
+
+创建一个简单的 Node.js 应用示例：
+
+1. 创建项目目录和文件：
+
+```bash
+mkdir my-node-app
+cd my-node-app
+touch app.js
+touch package.json
+touch Dockerfile
+```
+
+2. 编写 `package.json`：
+
+```json
+{
+  "name": "my-node-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}
+```
+
+3. 编写 `app.js`：
+
+```javascript
+const express = require('express');
+const app = express();
+const PORT = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello Docker!');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+```
+
+4. 创建 `Dockerfile`：
+
+```dockerfile
+# 使用官方 Node.js 运行时作为基础镜像
+FROM node:18-alpine
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制 package*.json 到工作目录
+COPY package*.json ./
+
+# 安装依赖
+RUN npm install
+
+# 复制应用源代码到工作目录
+COPY . .
+
+# 暴露端口
+EXPOSE 3000
+
+# 定义启动命令
+CMD [ "npm", "start" ]
+```
+
+5. 构建并运行：
+
+```bash
+# 构建镜像
+docker build -t my-node-app .
+
+# 运行容器
+docker run --name my-node-container -p 3000:3000 -d my-node-app
+
+# 访问应用
+curl http://localhost:3000
+```
+
+### 示例 5：使用 Docker Compose
+
+Docker Compose 允许使用 YAML 文件来定义多容器应用。
+
+1. 创建 `docker-compose.yml`：
+
+```yaml
+version: '3.8'
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+    depends_on:
+      - app
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+2. 运行多容器应用：
+
+```bash
+# 启动服务
+docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+
+# 停止服务
+docker-compose down
+```
+
+## Docker 最佳实践
+
+### 镜像优化
+
+1. **使用合适的基镜像**：选择更小的基镜像如 Alpine Linux 可以显著减小最终镜像的大小
+2. **多阶段构建**：在构建过程中使用多个 FROM 指令，只将必要的文件复制到最后的镜像中
+3. **合并 RUN 指令**：减少镜像层的数量，提高构建效率
+4. **清理缓存和临时文件**：在同一个 RUN 指令中安装包并清理缓存
+
+### 安全性
+
+1. **避免使用 root 用户**：使用 USER 指令切换到非 root 用户运行应用
+2. **使用 .dockerignore**：排除不必要的文件，如敏感配置文件或开发工具
+3. **扫描镜像漏洞**：定期扫描镜像中的安全漏洞
+4. **限制容器资源**：使用 --memory 和 --cpu-quota 限制容器资源使用
+
+### 性能优化
+
+1. **合理使用数据卷**：对于频繁读写的数据，使用数据卷而不是绑定挂载
+2. **使用 Docker BuildKit**：启用 BuildKit 可以提高构建速度和缓存效率
+3. **容器健康检查**：使用 HEALTHCHECK 指令检查容器内应用的健康状态
+
 

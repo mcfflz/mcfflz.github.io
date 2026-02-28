@@ -12,7 +12,7 @@ bookFlatSection: false
 
 1. 整理一个可用的文章编写 skill
 
-2. 归纳整理积累的学习资料
+2. a lot of todo...
 
 3. 归纳整理积累的笔记
 
