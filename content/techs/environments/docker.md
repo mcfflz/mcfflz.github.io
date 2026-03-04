@@ -68,7 +68,7 @@ EOF
 sudo apt update
 
 # 安装 docker 核心组件
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker compose-plugin
 
 # 启动 docker 服务
 sudo systemctl status docker
@@ -256,13 +256,12 @@ docker build -t my-image .
 docker build -f Dockerfile.prod -t my-image:prod .
 
 # 使用构建参数
-docker build --build-arg NODE_ENV=production -t my-image .
-
+docker build --build-arg NODE_ENV=production -t my-image .2
 # 使用 BuildKit（更快的构建速度）
 DOCKER_BUILDKIT=1 docker build -t my-image .
 ```
 
-## docker-compose.yaml
+## docker compose.yaml
 
 Docker Compose 允许使用 YAML 文件来定义和管理多容器应用。
 
@@ -371,40 +370,40 @@ networks:
     internal: true  # 内部网络，不连接外网
 ```
 
-### Compose 常用命令
+### docker compose 常用命令
 
 ```bash
 # 启动服务（后台运行）
-docker-compose up -d
+docker compose up -d
 
 # 启动并重建容器
-docker-compose up -d --build
+docker compose up -d --build
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 
 # 查看日志
-docker-compose logs
-docker-compose logs -f app  # 跟踪特定服务日志
+docker compose logs
+docker compose logs -f app  # 跟踪特定服务日志
 
 # 停止服务
-docker-compose stop
+docker compose stop
 
 # 停止并删除容器、网络（保留数据卷）
-docker-compose down
+docker compose down
 
 # 停止并删除容器、网络和数据卷
-docker-compose down -v
+docker compose down -v
 
 # 重启服务
-docker-compose restart
+docker compose restart
 
 # 进入服务容器
-docker-compose exec app /bin/bash
+docker compose exec app /bin/bash
 
 # 构建/重建服务
-docker-compose build
-docker-compose build --no-cache  # 不使用缓存
+docker compose build
+docker compose build --no-cache  # 不使用缓存
 ```
 
 ## Docker 实践示例
@@ -554,9 +553,7 @@ curl http://localhost:3000
 
 ### 示例 5：使用 Docker Compose
 
-Docker Compose 允许使用 YAML 文件来定义多容器应用。
-
-1. 创建 `docker-compose.yml`：
+1. 创建 `docker compose.yml`：
 
 ```yaml
 version: '3.8'
@@ -595,13 +592,13 @@ volumes:
 
 ```bash
 # 启动服务
-docker-compose up -d
+docker compose up -d
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 
 # 停止服务
-docker-compose down
+docker compose down
 ```
 
 ## Docker 最佳实践

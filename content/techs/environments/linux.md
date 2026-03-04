@@ -61,93 +61,46 @@ linux 核心目录及简要介绍：
 这种结构将静态的命令、动态的数据、用户的文件、系统的配置清晰地分离。对于普通用户，最常接触的是 `/home` 下的个人目录和 `/usr` 下的应用程序；而系统管理员则需要关注 `/etc`, `/var/log` 等目录。
 
 
-## linux 用户和用户组
+## 一、Linux 用户管理
 
+### 1. 用户查询
 ```bash
-# 基本创建
+# 查看完整用户信息（含UID/GID/家目录等）
+cat /etc/passwd
+# 或使用更安全的查询方式
+getent passwd
+
+# 过滤普通用户（UID≥1000）
+getent passwd | awk -F: '$3 >= 1000 {print $1}'
+
+# 查看当前用户信息
+id
+whoami
+
+# 查看登录用户详情
+w
+last
+```
+
+### 2. 用户创建
+```bash
+# 基础创建（默认家目录 /home/username）
 sudo useradd username
 
-# 创建用户并指定家目录
-sudo useradd -m username
-
-# 创建用户并设置 home 目录路径
-sudo useradd -m -d /home/customdir username
-
-# 创建用户并指定登录shell
-sudo useradd -m -s /bin/bash username
-
-# 创建用户并指定UID
-sudo useradd -m -u 1001 username
-
-# 创建用户并指定主组
-sudo useradd -m -g groupname username
-
-# 创建用户并指定附加组
-sudo useradd -m -G group1,group2 username
+# 高级参数组合
+sudo useradd -m -d /custom/home -s /bin/zsh -u 1005 -g developers -G admins,devops username
+# -m: 自动创建家目录
+# -d: 指定自定义家目录路径
+# -s: 设置登录 Shell
+# -u: 指定 UID（需唯一且 >1000）
+# -g: 主组（需提前存在）
+# -G: 附加组（逗号分隔，不覆盖原有组）
 
 # 创建系统用户（无家目录，不登录）
-sudo useradd -r -s /sbin/nologin username
-
-# 删除用户但保留家目录
-sudo userdel username
-
-# 删除用户及家目录
-sudo userdel -r username
-
-# 强制删除（即使用户已登录）
-sudo userdel -f -r username
+sudo useradd -r -s /sbin/nologin service_account
 ```
 
-### 用户信息查询
-
-```bash
-# 查看用户信息
-id username
-whoami              # 当前用户
-who                 # 登录用户
-w                   # 详细信息
-last username       # 用户登录历史
-finger username     # 用户详细信息
-
-# 查看用户配置
-cat /etc/passwd
-grep username /etc/passwd
-cat /etc/shadow
-```
-
-### 用户组管理
-
-```bash
-# 将用户添加到附加组
-sudo usermod -aG groupname username
-
-# 更改用户的主组
-sudo usermod -g newprimarygroup username
-
-# 查看用户所属组
-groups username
-id username
-```
-
-### 密码管理
-
-```bash
-# 设置用户密码
-sudo passwd username
-
-# 锁定用户密码（禁止登录）
-sudo passwd -l username
-
-# 解锁用户密码
-sudo passwd -u username
-
-# 删除用户密码（允许无密码登录）
-sudo passwd -d username```
-
-```
-
-### 修改用户属性
-
+### 3. 用户修改
 ```bash
 # 修改用户名
 sudo usermod -l newname oldname
@@ -162,18 +115,150 @@ sudo usermod -d /new/home/dir -m username
 sudo usermod -s /bin/bash username
 
 # 修改UID
-sudo usermod -u 1002 username
+sudo usermod -u 2002 username
 
-# 锁定用户账户
+# 修改主组
+sudo usermod -g new_primary_group username
+
+# 添加/删除附加组
+sudo usermod -aG dev_team username    # -a 保留原有组
+sudo gpasswd -d username admins       # 从组中移除
+
+# 锁定/解锁账户
 sudo usermod -L username
-
-# 解锁用户账户
 sudo usermod -U username
-
-# 修改用户过期日期
-sudo usermod -e 2025-12-31 username
 ```
 
+### 4. 用户删除
+```bash
+# 保留家目录
+sudo userdel username
+
+# 完全删除（含家目录和邮件池）
+sudo userdel -r username
+
+# 强制删除（即使用户已登录）
+sudo userdel -f -r username
+
+# 注意：删除前需检查进程占用
+ps -u username
+```
+
+---
+
+## 二、Linux 用户组管理
+
+### 1. 用户组查询
+```bash
+# 查看所有组
+getent group
+cat /etc/group
+
+# 查看当前用户所属组
+groups username
+id username
+
+# 查看特定组详情
+getent group developers
+```
+
+### 2. 用户组创建
+```bash
+# 创建新组（默认GID）
+sudo groupadd developers
+
+# 指定GID创建
+sudo groupadd -g 1005 testers
+```
+
+### 3. 用户组修改
+```bash
+# 重命名组
+sudo groupmod -n dev_team developers
+
+# 修改GID
+sudo groupmod -g 2001 dev_team
+
+# 设置组密码（慎用）
+sudo groupmod -p password dev_team
+```
+
+### 4. 用户组删除
+```bash
+# 删除空组
+sudo groupdel testers
+
+# 注意：无法删除作为主组的组
+```
+
+### 5. 用户组成员管理
+```bash
+# 添加用户到附加组
+sudo usermod -aG dev_team alice
+
+# 从组中移除用户
+sudo gpasswd -d alice dev_team
+
+# 设置组管理员
+sudo gpasswd -A alice dev_team
+
+# 批量添加用户到多个组
+for GROUP in dev ops; do
+  sudo usermod -aG $GROUP bob
+done
+```
+
+---
+
+## 三、Linux 密码管理
+
+### 1. 密码设置
+```bash
+# 交互式设置密码
+sudo passwd username
+
+# 非交互式设置（需sudo权限）
+echo "SecurePass123!" | sudo passwd --stdin username
+
+# 强制密码复杂度（需libpam-cracklib）
+passwd -e username
+```
+
+### 2. 密码修改
+```bash
+# 用户自主修改
+passwd
+
+# 管理员重置密码
+sudo passwd username
+```
+
+### 3. 密码重置
+```bash
+# 锁定账户（禁止登录）
+sudo passwd -l username
+
+# 解锁账户
+sudo passwd -u username
+
+# 删除用户密码（允许无密码登录）
+sudo passwd -d username
+```
+
+### 4. 密码策略
+```bash
+# 设置密码有效期（90天）
+chage -M 90 username
+
+# 设置过期提醒（过期前7天警告）
+chage -W 7 username
+
+# 设置账户过期日期
+chage -E 2026-12-31 username
+
+# 强制下次登录修改密码
+chage -d 0 username
+```
 
 
 # linux 硬盘挂载
