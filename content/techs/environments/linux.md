@@ -58,32 +58,22 @@ linux 核心目录及简要介绍：
 | `/root` | root 用户目录，仅 root 用户使用。 |
 | `/proc` | 进程与内核信息，一个虚拟文件系统，提供关于系统进程和内核参数的实时信息。 |
 
-这种结构将静态的命令、动态的数据、用户的文件、系统的配置清晰地分离。对于普通用户，最常接触的是 `/home` 下的个人目录和 `/usr` 下的应用程序；而系统管理员则需要关注 `/etc`, `/var/log` 等目录。
 
+## linux 常用命令
 
-## 一、Linux 用户管理
+仅列出日常常用命令，高级功能参考教程。
 
-### 1. 用户查询
+### 1. 用户管理
+
 ```bash
 # 查看完整用户信息（含UID/GID/家目录等）
 cat /etc/passwd
-# 或使用更安全的查询方式
 getent passwd
-
-# 过滤普通用户（UID≥1000）
-getent passwd | awk -F: '$3 >= 1000 {print $1}'
 
 # 查看当前用户信息
 id
 whoami
 
-# 查看登录用户详情
-w
-last
-```
-
-### 2. 用户创建
-```bash
 # 基础创建（默认家目录 /home/username）
 sudo useradd username
 
@@ -96,12 +86,6 @@ sudo useradd -m -d /custom/home -s /bin/zsh -u 1005 -g developers -G admins,devo
 # -g: 主组（需提前存在）
 # -G: 附加组（逗号分隔，不覆盖原有组）
 
-# 创建系统用户（无家目录，不登录）
-sudo useradd -r -s /sbin/nologin service_account
-```
-
-### 3. 用户修改
-```bash
 # 修改用户名
 sudo usermod -l newname oldname
 
@@ -120,17 +104,6 @@ sudo usermod -u 2002 username
 # 修改主组
 sudo usermod -g new_primary_group username
 
-# 添加/删除附加组
-sudo usermod -aG dev_team username    # -a 保留原有组
-sudo gpasswd -d username admins       # 从组中移除
-
-# 锁定/解锁账户
-sudo usermod -L username
-sudo usermod -U username
-```
-
-### 4. 用户删除
-```bash
 # 保留家目录
 sudo userdel username
 
@@ -144,11 +117,7 @@ sudo userdel -f -r username
 ps -u username
 ```
 
----
-
-## 二、Linux 用户组管理
-
-### 1. 用户组查询
+### 2. 用户组管理
 ```bash
 # 查看所有组
 getent group
@@ -258,6 +227,28 @@ chage -E 2026-12-31 username
 
 # 强制下次登录修改密码
 chage -d 0 username
+```
+
+## tmux
+
+```bash
+# 启动新会话（默认名称）
+tmux
+
+# 启动命名会话
+tmux new -s session_name
+
+# 查看所有会话
+tmux ls
+
+# 重新连接会话
+tmux attach -t session_name
+
+# 从会话中分离（返回原终端）
+前缀键 + D  # 按 Ctrl+B，松开，再按 D
+
+# 重命名当前会话
+前缀键 + $
 ```
 
 

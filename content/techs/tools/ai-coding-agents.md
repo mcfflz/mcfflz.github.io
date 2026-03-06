@@ -1,6 +1,6 @@
 ---
 date: 2026-02-26T00:00:00+08:00
-title: Opencode
+title: AI Coding Agent
 draft: false
 # bookFlatSection: false        # 是否显示扁平章节（默认false）
 # bookToc: true                 # 是否显示目录（默认true）
@@ -13,19 +13,44 @@ draft: false
 # weight: 1                     # 内容权重（排序用）
 ---
 
-# Opencode
+# AI 编程智能体
 
-## 参考资料
+## Claude Code
+
+### 参考资料
+
+无
+
+### 安装
+
+环境：tencentcloud Ubuntu Server 24.04 LTS 64bit
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+### 配置文件
+
+```bash
+# ~/.claude/settings.json
+"env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-",
+    "ANTHROPIC_BASE_URL": "https://",
+    "ANTHROPIC_MODEL": "qwen3"
+  },
+```
+
+## OpenCode
+
+### 参考资料
 
 [Opencode docs](https://www.opencodecn.com/docs)
 
-## 概述
+### 概述
 
 OpenCode是一个开源的编程助手工具，专注于提供智能化的代码生成、补全和分析功能。能够帮助开发者提高编程效率，通过自然语言描述生成相应代码，或对现有代码进行优化建议。
 
-## 安装
-
-环境：tencentcloud Ubuntu Server 24.04 LTS 64bit
+### 安装
 
 ```bash
 # 使用官方提供的安装脚本
@@ -34,13 +59,13 @@ curl -fsSL https://opencode.ai/install | bash
 npm install -g opencode-ai
 ```
 
-## 配置文件
+### 配置文件
 
 - `~/.config/opencode/opencode.json` - 全局配置，通常在这里配置模型供应商
 
 - `opencode.json` - 项目特定的配置
 
-## opencode tui 常用命令
+### opencode tui 常用命令
 
 OpenCode 提供了一个终端用户界面（TUI），可以通过以下命令启动：
 
@@ -153,3 +178,4 @@ TUI 提供了直观的终端界面，用于在项目中与 LLM 协作。
 opencode export session_id > file_name
 
 ```
+
