@@ -15,7 +15,7 @@ draft: false
 
 # AI 编程智能体
 
-## Claude Code
+## claude code
 
 ### 参考资料
 
@@ -33,22 +33,18 @@ npm install -g @anthropic-ai/claude-code
 
 ```bash
 # ~/.claude/settings.json
-"env": {
-    "ANTHROPIC_AUTH_TOKEN": "sk-",
-    "ANTHROPIC_BASE_URL": "https://",
-    "ANTHROPIC_MODEL": "qwen3"
-  },
+# "env": {
+#     "ANTHROPIC_AUTH_TOKEN": "sk-",
+#     "ANTHROPIC_BASE_URL": "https://",
+#     "ANTHROPIC_MODEL": "qwen3"
+#   },
 ```
 
-## OpenCode
+## opencode
 
 ### 参考资料
 
 [Opencode docs](https://www.opencodecn.com/docs)
-
-### 概述
-
-OpenCode是一个开源的编程助手工具，专注于提供智能化的代码生成、补全和分析功能。能够帮助开发者提高编程效率，通过自然语言描述生成相应代码，或对现有代码进行优化建议。
 
 ### 安装
 
@@ -61,121 +57,98 @@ npm install -g opencode-ai
 
 ### 配置文件
 
-- `~/.config/opencode/opencode.json` - 全局配置，通常在这里配置模型供应商
+```bash
+# `~/.config/opencode/opencode.json` - 全局配置
+# 配置模型供应商
+# "provider": {
+#   "google": {
+#     "name": "Google",
+#     "npm": "@ai-sdk/google",
+#     "options": {
+#       "apiKey": "",
+#       "baseURL": ""
+#     },
+#     "models": {
+#       "gemini-3.1-pro-antigravity":{
+#         "name": "Gemini-3.1-Pro-Preview"
+#       }
+#     }
+#   }
+# }
 
-- `opencode.json` - 项目特定的配置
+# 配置智能体
+# "agent": {
+#   "orchestrator": {
+#     "description": "软件研发工程团队的 team leader",
+#     "mode": "primary/subagent",
+#     "file": "~/.opencode/agents/orchestrator.md"
+# }
+
+# `/.opencode/opencode.json` - 项目特定的配置
+# 配置方式和全局配置内容相同
+```
 
 ### opencode tui 常用命令
 
-OpenCode 提供了一个终端用户界面（TUI），可以通过以下命令启动：
-
 ```bash
-# 当前工作目录
-opencode
-# 或者指定工作目录
-opencode /path/to/project
-```
+# 启动
+opencode # 当前工作目录启动
+opencode /path/to/project # 指定工作目录启动
 
-TUI 提供了直观的终端界面，用于在项目中与 LLM 协作。
-
-### 文件引用
-
-可以在消息中使用 `@` 引用文件。
-
-```
+# 文件引用
 @packages/functions/src/api/index.ts 中的身份验证是如何处理的？
-```
 
-文件内容会自动添加到对话中。
-
-### Bash 命令
-
-以 `!` 开头的消息会运行 shell 命令。
-```
+# Bash 命令
+# 以 `!` 开头的消息会运行 shell 命令，命令的输出会作为工件结果添加到对话中
 !ls -la
-```
 
-命令的输出会作为工件结果添加到对话中。
-
-### 斜杠命令
-
-在使用 OpenCode TUI 时，可以输入 `/` 后跟命令名称来快速执行操作。以下是常用的斜杠命令：
-
-#### help
-显示帮助对话框。
-```
+# 显示帮助对话框
 /help
-```
 
-#### init
-创建或更新 `AGENTS.md` 文件。[了解更多](https://www.opencodecn.com/docs/rules)。
-```
+# init 创建或更新 `AGENTS.md` 文件。[了解更多](https://www.opencodecn.com/docs/rules)
 /init
-```
 
-#### models
-列出可用模型。
-```
+# 列出可用模型
 /models
-```
 
-#### new
-开始新对话。别名：`/clear`
-```
+# 开始新对话
 /new
-```
 
-#### sessions
-列出并切换会话。别名：`/resume`、`/continue`
-```
+# 列出并切换会话
 /sessions
-```
 
-#### undo
-撤销对话中的最后一条消息。删除最近的用户消息、所有后续响应以及任何文件更改。
-> 提示：所做的任何文件更改也会被还原。
-在内部，这使用 Git 来管理文件更改。所以你的项目**需要是一个 Git 仓库**。
-```
+# 撤销对话中的最后一条消息。删除最近的用户消息、所有后续响应以及任何文件更改。
 /undo
-```
 
-#### redo
-重做之前撤销的消息。仅在使用 `/undo` 后可用。
-> 提示：任何文件更改也将被恢复。
-在内部，这使用 Git 来管理文件更改。所以你的项目**需要是一个 Git 仓库**。
-```
+# 重做之前撤销的消息。仅在使用 `/undo` 后可用
 /redo
-```
 
-#### exit
-退出 OpenCode。别名：`/quit`、`/q`
-```
+# 仅在一个 session 下有效。分享当前对话
+/share
+
+# 仅在一个 session 下有效。取消分享当前对话
+/unshare
+
+# 仅在一个 session 下有效。压缩当前对话
+/compact
+
+# 退出
 /exit
 ```
 
-#### share
-仅在一个 session 下有效。分享当前对话。
-```
-/share
-```
-
-#### unshare
-仅在一个 session 下有效。取消分享当前对话。
-```
-/unshare
-```
-
-#### compact
-仅在一个 session 下有效。压缩当前对话。别名：`/summarize`
-```
-/compact
-```
-
-## opencode cli 常用命令
+### opencode cli 常用命令
 
 ```bash
 # 导出 session 
-opencode export session_id > file_name
-
+opencode export <session_id> > <file_name>
 ```
 
+
+## codex
+
+### 安装
+
+```bash
+# 使用 npm 安装
+npm install -g @openai/codex
+```
