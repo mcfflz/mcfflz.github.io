@@ -15,6 +15,10 @@ draft: false
 
 # AI 编程智能体
 
+claude code、opencode、codex 这些本质上属于 coding 类智能体。
+
+当然除了 coding 之外，它们也可以做很多工作。
+
 ## claude code
 
 ### 参考资料
@@ -76,14 +80,6 @@ npm install -g opencode-ai
 #   }
 # }
 
-# 配置智能体
-# "agent": {
-#   "orchestrator": {
-#     "description": "软件研发工程团队的 team leader",
-#     "mode": "primary/subagent",
-#     "file": "~/.opencode/agents/orchestrator.md"
-# }
-
 # `/.opencode/opencode.json` - 项目特定的配置
 # 配置方式和全局配置内容相同
 ```
@@ -143,6 +139,21 @@ opencode /path/to/project # 指定工作目录启动
 opencode export <session_id> > <file_name>
 ```
 
+### opencode subagent
+
+subagent 能有效节省主空间的上下文，并行执行任务。
+
+opencode 支持在配置文件中配置 primary 和 subagent 。可以定义和尝试构建一套完整的工作流。
+
+```bash
+# 配置智能体
+# "agent": {
+#   "orchestrator": {
+#     "description": "软件研发工程团队的 team leader",
+#     "mode": "primary/subagent",
+#     "file": "~/.opencode/agents/orchestrator.md"
+# }
+```
 
 ## codex
 
