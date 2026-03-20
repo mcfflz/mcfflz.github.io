@@ -297,6 +297,7 @@ find <directory> -name <filename>
 init.d 目录中存放的是系统服务的管理（启动与停止）脚本。
 
 ### 网络管理命令
+
 ```bash
 # ifconfig 查看ip
 ifconfig
@@ -326,7 +327,7 @@ ctrl+e 光标移动到最后面
 ctrl+r 查找历史命令
 ```
 
-### 操作系统命令
+### 进程管理
 
 ```bash
 # uname 查看操作系统信息
@@ -362,6 +363,45 @@ top -hv | -bcEHiOSs1 -d secs -n max -u|U user -p pid(s) -o field -w [cols]
 env
 ```
 
+### 应用管理
+
+```bash
+# apt 是 Debian 和 Ubuntu 系统的包管理工具，用于安装、更新、删除软件包及管理依赖关系。
+# 查看安装的软件包
+apt list --installed
+
+# 搜索包含关键词的包
+apt search <keyword>
+
+# 安装软件包
+sudo apt install <package>            # 安装单个包
+sudo apt install pkg1 pkg2            # 安装多个包
+sudo apt install <package>=<version>  # 安装指定版本
+
+# 卸载软件包
+sudo apt remove <package>   # 保留配置文件
+sudo apt purge <package>    # 彻底删除包及配置
+sudo apt autoremove         # 清理不再需要的依赖
+
+# 升级软件包
+sudo apt update             # 更新软件仓库版本信息
+apt list --upgradable       # 列出可以升级的软件包
+sudo apt upgrade            # 保留旧配置升级
+sudo apt full-upgrade       # 可能移除冲突包（推荐大版本升级时使用）
+
+# 依赖关系
+apt depends <package>         # 查看依赖树
+sudo apt --fix-broken install # 修复依赖关系
+
+# 清除缓存
+sudo apt clean
+
+# snap 是自包含的容器化软件包（.snap格式），集成应用程序及其所有依赖项，支持跨发行版运行
+# snap 软件管理命令和 apt 命令相似，不做赘述
+# snap 有一些高级命令
+
+# aptitude 是提供图形化界面，可以更好地管理包
+```
 
 ### 压缩/解压缩命令
 
@@ -453,4 +493,6 @@ crontab -r
 # `@daily` / `@midnight`：等同于 `0 0 * * *`（每天0点0分）。
 # `@hourly`：等同于 `0 * * * *`（每小时0分）。
 ```
+
+
 

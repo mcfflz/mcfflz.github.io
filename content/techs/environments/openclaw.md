@@ -284,22 +284,19 @@ vi ~/.openclaw/openclaw.json
 
 ## 常用 openclaw 命令
 
-### 配置管理
+### openclaw config 配置管理
 
 通常直接编辑配置文件，不使用命令行。
 
 ```bash
-# 查看当前配置
-openclaw config show
+# 查看当前配置文件
+openclaw config file
 
-# 设置配置项
-openclaw config set <key> <value>
-
-# 导出配置
-openclaw config export > backup-config.json
+# 进入配置流程
+openclaw config
 ```
 
-### 服务管理
+### openclaw gateway 网关管理
 
 ```bash
 # 检查网关状态
@@ -315,7 +312,8 @@ openclaw gateway stop
 openclaw gateway restart
 ```
 
-### 模型管理
+### openclaw models 模型管理
+
 ```bash
 # 列出所有可用模型
 openclaw models list
@@ -325,7 +323,8 @@ openclaw models set <model-name>
 openclaw models set-image <model-name>
 ```
 
-### 技能管理
+### openclaw skills 技能管理
+
 ```bash
 # 列出所有技能
 openclaw skills list
@@ -334,7 +333,7 @@ openclaw skills list
 openclaw skills info <skill-name>
 ```
 
-### 通信渠道
+### openclaw channels 渠道管理
 
 ```bash
 # 列出所有渠道
@@ -342,6 +341,13 @@ openclaw channels list
 
 # 查看渠道状态
 openclaw channels status
+```
+
+### openclaw sessions 会话管理
+
+```bash
+# 列出所有会话
+openclaw sessions
 ```
 
 ## openclaw cron 定时任务
