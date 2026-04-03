@@ -42,3 +42,24 @@ wmic useraccount list brief
 当前用户菜单文件 `%APPDATA%\Microsoft\Windows\Start Menu\Programs`
 
 所有用户菜单文件 `C:\ProgramData\Microsoft\Windows\Start Menu\Programs`
+
+## 设置 powershell 终端
+
+```powershell
+# 查看所有配置文件地址
+# 使用 CurrentUserAllHosts 或 CurrentUserCurrentHost
+
+$PROFILE | Select-Object *
+
+# 如果目录和文件不存在，则创建目录和文件
+if (-not (Test-Path $parentDir)) { New-Item -ItemType Directory -Path $parentDir -Force }
+New-Item -Path $PROFILE -ItemType File -Force
+Test-Path $PROFILE
+
+# 编辑文件
+notepad $PROFILE
+
+# 保证和服务端的终端一致
+# 在 linux 服务器执行 echo $TERM
+$Env:TERM = "xterm-256color"
+```
