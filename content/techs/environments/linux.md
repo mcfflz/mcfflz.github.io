@@ -288,11 +288,11 @@ find <directory> -name <filename>
 
 ### linux 中比较重要的文件
 
-### /etc/profile
+#### /etc/profile
 
 此文件涉及系统的环境，即环境变量相关。这里修改会对所有用户起作用。/etc/profile会首先执行/etc/profile.d/目录下的所有*.sh文件
 
-### /etc/init.d/
+#### /etc/init.d/
 
 init.d 目录中存放的是系统服务的管理（启动与停止）脚本。
 
@@ -325,6 +325,16 @@ ctrl+a 光标移动到最前面
 ctrl+e 光标移动到最后面
 
 ctrl+r 查找历史命令
+```
+
+### 内存管理
+
+```bash
+# 查看内存使用情况
+free -h
+
+# 查看内存占用前10的进程
+ps aux --sort=-%mem | head -10
 ```
 
 ### 进程管理
