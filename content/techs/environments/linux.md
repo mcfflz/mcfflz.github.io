@@ -58,97 +58,32 @@ linux 核心目录及简要介绍：
 | `/root` | root 用户目录，仅 root 用户使用。 |
 | `/proc` | 进程与内核信息，一个虚拟文件系统，提供关于系统进程和内核参数的实时信息。 |
 
-这种结构将静态的命令、动态的数据、用户的文件、系统的配置清晰地分离。对于普通用户，最常接触的是 `/home` 下的个人目录和 `/usr` 下的应用程序；而系统管理员则需要关注 `/etc`, `/var/log` 等目录。
 
+## linux 常用命令
 
-## linux 用户和用户组
+### 用户管理
 
 ```bash
-# 基本创建
+# 查看完整用户信息（含UID/GID/家目录等）
+cat /etc/passwd
+getent passwd
+
+# 查看当前用户信息
+id
+whoami
+
+# 基础创建（默认家目录 /home/username）
 sudo useradd username
 
-# 创建用户并指定家目录
-sudo useradd -m username
+# 高级参数组合
+sudo useradd -m -d /custom/home -s /bin/zsh -u 1005 -g developers -G admins,devops username
+# -m: 自动创建家目录
+# -d: 指定自定义家目录路径
+# -s: 设置登录 Shell
+# -u: 指定 UID（需唯一且 >1000）
+# -g: 主组（需提前存在）
+# -G: 附加组（逗号分隔，不覆盖原有组）
 
-# 创建用户并设置 home 目录路径
-sudo useradd -m -d /home/customdir username
-
-# 创建用户并指定登录shell
-sudo useradd -m -s /bin/bash username
-
-# 创建用户并指定UID
-sudo useradd -m -u 1001 username
-
-# 创建用户并指定主组
-sudo useradd -m -g groupname username
-
-# 创建用户并指定附加组
-sudo useradd -m -G group1,group2 username
-
-# 创建系统用户（无家目录，不登录）
-sudo useradd -r -s /sbin/nologin username
-
-# 删除用户但保留家目录
-sudo userdel username
-
-# 删除用户及家目录
-sudo userdel -r username
-
-# 强制删除（即使用户已登录）
-sudo userdel -f -r username
-```
-
-### 用户信息查询
-
-```bash
-# 查看用户信息
-id username
-whoami              # 当前用户
-who                 # 登录用户
-w                   # 详细信息
-last username       # 用户登录历史
-finger username     # 用户详细信息
-
-# 查看用户配置
-cat /etc/passwd
-grep username /etc/passwd
-cat /etc/shadow
-```
-
-### 用户组管理
-
-```bash
-# 将用户添加到附加组
-sudo usermod -aG groupname username
-
-# 更改用户的主组
-sudo usermod -g newprimarygroup username
-
-# 查看用户所属组
-groups username
-id username
-```
-
-### 密码管理
-
-```bash
-# 设置用户密码
-sudo passwd username
-
-# 锁定用户密码（禁止登录）
-sudo passwd -l username
-
-# 解锁用户密码
-sudo passwd -u username
-
-# 删除用户密码（允许无密码登录）
-sudo passwd -d username```
-
-```
-
-### 修改用户属性
-
-```bash
 # 修改用户名
 sudo usermod -l newname oldname
 
@@ -158,256 +93,229 @@ sudo usermod -d /new/home/dir username
 # 移动家目录内容到新位置
 sudo usermod -d /new/home/dir -m username
 
-# 修改登录shell
-sudo usermod -s /bin/bash username
-
 # 修改UID
-sudo usermod -u 1002 username
+sudo usermod -u 2002 username
 
-# 锁定用户账户
-sudo usermod -L username
+# 修改主组
+sudo usermod -g new_primary_group username
 
-# 解锁用户账户
-sudo usermod -U username
+# 删除用户（保留家目录）
+# 注意：删除前需检查进程占用
+ps -u username
+sudo userdel username
 
-# 修改用户过期日期
-sudo usermod -e 2025-12-31 username
+# 删除用户（不保留家目录）
+sudo userdel -r username
+
+# 强制删除（即使用户已登录）
+sudo userdel -f -r username
 ```
 
-
-
-# linux 硬盘挂载
-
-## lsblk 查看硬盘信息（块存储）
+### 密码管理
 
 ```bash
+# 用户自主修改密码
+passwd
+
+# 管理员重置密码
+sudo passwd username
+
+# 锁定账户（禁止登录）
+sudo passwd -l username
+
+# 解锁账户
+sudo passwd -u username
+
+# 删除用户密码（允许无密码登录）
+sudo passwd -d username
+```
+
+### 用户组管理
+
+用户组用于实现用户角色划分，便于权限管理
+
+```bash
+# 查看所有组
+getent group
+cat /etc/group
+
+# 查看当前用户所属组
+groups username
+id username
+
+# 查看特定组详情
+getent group developers
+
+# 创建新组（默认GID）
+sudo groupadd developers
+
+# 指定GID创建
+sudo groupadd -g 1005 testers
+
+# 重命名组
+sudo groupmod -n dev_team developers
+
+# 修改GID
+sudo groupmod -g 2001 dev_team
+
+# 设置组密码（慎用）
+sudo groupmod -p password dev_team
+
+# 删除空组
+# 注意：无法删除作为主组的组
+sudo groupdel testers 
+
+# 添加用户到附加组
+sudo usermod -aG dev_team alice
+
+# 从组中移除用户
+sudo gpasswd -d alice dev_team
+
+# 设置组管理员
+sudo gpasswd -A alice dev_team
+
+# 批量添加用户到多个组
+for GROUP in dev ops; do
+  sudo usermod -aG $GROUP bob
+done
+```
+
+### 硬盘挂载
+
+```bash
+# 查看硬盘信息（块存储）
 lsblk -f
-```
 
-## fdisk 查看磁盘分区信息
-
-```bash
+# fdisk 查看磁盘分区信息
 fdisk -l
-```
 
-## mount 挂载文件系统
-
-挂载文件系统到某个目录下，使得能够文件系统能够访问该磁盘。
-
-```bash
+# mount 挂载文件系统
 mount /dev/sda1 /home/thtf/file
-```
 
-## umount 卸载文件系统
-
-```bash
+# umount 卸载文件系统
 umount /dev/sda1
-```
 
-## df 查看磁盘使用情况
-
-```bash
+# df 查看磁盘使用情况
 df -l
 ```
 
-## /etc/fstab 挂载配置文件
+### 磁盘空间
 
 ```bash
+# 查看当前目录下所有文件和目录的总大小，*默认不匹配隐藏文件
+du -sh *
 
+# 查看指定路径下一级子目录的大小
+du -h --max-depth=1 <directory>
+
+# 交互式工具
+ncdu
 ```
 
-# linux 文件操作
-
-## 文件属性
+### 文件属性
 
 [Linux 文件基本属性 | 菜鸟教程 (runoob.com)](https://www.runoob.com/linux/linux-file-attr-permission.html)
 
-### 文件类型
+
 
 ```bash
-在 Linux 中第一个字符代表这个文件是目录、文件或链接文件等等。
+# 在 Linux 中第0个字符代表这个文件是目录、文件或链接文件等等。
 
-当为 d 则是目录
-当为 - 则是文件；
-若是 l 则表示为链接文档(link file)；
-若是 b 则表示为装置文件里面的可供储存的接口设备(可随机存取装置)；
-若是 c 则表示为装置文件里面的串行端口设备，例如键盘、鼠标(一次性读取装置)。
-```
+# 当为 d 则是目录
+# 当为 - 则是文件；
+# 若是 l 则表示为链接文档(link file)；
+# 若是 b 则表示为装置文件里面的可供储存的接口设备(可随机存取装置)；
+# 若是 c 则表示为装置文件里面的串行端口设备，例如键盘、鼠标(一次性读取装置)。
 
-### ugoa
+# 在 Linux 中第1-9个字符代表这个文件的权限
+# ugoa
+# user：用户
+# group：组
+# others：其他
+# all：全部
+# 第1-3位确定所属用户（该文件的所有者,）拥有该文件的权限
+# 第4-6位确定所属用户组（所有者的同组用户）拥有该文件的权限
+# 第7-9位确定其他用户拥有该文件的权限。
 
-```bash
-user：用户
-group：组
-others：其他
-all：全部
-第1-3位确定所属用户（该文件的所有者,）拥有该文件的权限
-第4-6位确定所属用户组（所有者的同组用户）拥有该文件的权限
-第7-9位确定其他用户拥有该文件的权限。
-```
-
-### rwx
-
-```bash
-r -- 4 readable
-w -- 2 writeable
-x -- 1 executable
+# rwx
+# r -- 4 readable
+# w -- 2 writeable
+# x -- 1 executable
 # chmod u=rwx,g=rx,o=r filename 等价于 chmod 754 filename
 # rwx存在依赖关系：
 # 对所有文件，x依赖于r；
 # 对目录文件，w依赖于x
 # 对普通文件，w没有依赖
-目录文件 r(4) rx(5) rwx(7)
-普通文件 r(4) rw(6) rx(5) rwx(7)
+# 目录文件 r(4) rx(5) rwx(7)
+# 普通文件 r(4) rw(6) rx(5) rwx(7)
+
+
+# mkdir 创建目录
+mkdir <directory>
+
+# touch 创建文件
+touch <filename>
+
+# chown 更改文件所属用户和用户组
+chown [OWNER][:[GROUP]] <filename>
+
+# chgrp 更改文件所属用户组
+chgrp <groupname> <filename>
+
+#  chmod 更改文件权限
+chmod [OPTION]... MODE <filename>...
 ```
 
-## mkdir 创建目录
+
+### 文件查阅
 
 ```bash
-# mkdir - make directories
-mkdir [OPTION]... DIRECTORY...
+# 查看文件内容
+cat <filename>
+
+# more 分页查看文件
+more <filename>
+
+# head 从文件头开始查阅
+head <filename>
+
+# tail 查看文件尾开始查阅
+tail <filename>
+
+# find 查找文件
+find <directory> -name <filename>
 ```
 
-## touch 创建文件
+### linux 中比较重要的文件
 
-```bash
-# touch - change file timestamps
-touch [OPTION]... FILE...
-```
-
-## chown 更改文件所属用户和用户组
-
-```bash
-# chown - change file owner and group
-chown [OPTION]... [OWNER][:[GROUP]] FILE...
-chown [OPTION]... --reference=RFILE FILE...
-
-chmod thtf filename
-```
-
-## chgrp 更改文件所属用户组
-
-```bash
-# chgrp - change group ownership
-chgrp [OPTION]... GROUP FILE...
-chgrp [OPTION]... --reference=RFILE FILE...
-```
-
-##  chmod 更改文件权限
-
-```bash
-# chmod - change file mode bits
-chmod [OPTION]... MODE[,MODE]... FILE...
-chmod [OPTION]... OCTAL-MODE FILE...
-chmod [OPTION]... --reference=RFILE FILE...
-```
-
-## ln 链接
-
-```bash
-# ln 
-ln [OPTION]... [-T] TARGET LINK_NAME
-  or:  ln [OPTION]... TARGET
-  or:  ln [OPTION]... TARGET... DIRECTORY
-  or:  ln [OPTION]... -t DIRECTORY TARGET...
-
-```
-
-
-
-# linux 中比较重要的文件
-
-## /etc/profile
+#### /etc/profile
 
 此文件涉及系统的环境，即环境变量相关。这里修改会对所有用户起作用。/etc/profile会首先执行/etc/profile.d/目录下的所有*.sh文件
 
-## /etc/init.d/
+#### /etc/init.d/
 
 init.d 目录中存放的是系统服务的管理（启动与停止）脚本。
 
-
-
-
-
-# linux 网络
-
-## ifconfig 查看ip
+### 网络管理命令
 
 ```bash
+# ifconfig 查看ip
 ifconfig
 
-eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 172.25.18.32  netmask 255.255.192.0  broadcast 172.25.63.255
-        inet6 fe80::216:3eff:fe34:d9a4  prefixlen 64  scopeid 0x20<link>
-        ether 00:16:3e:34:d9:a4  txqueuelen 1000  (Ethernet)
-        RX packets 883830  bytes 1239691155 (1.2 GB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 503995  bytes 41476128 (41.4 MB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-
-lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
-        inet 127.0.0.1  netmask 255.0.0.0
-        inet6 ::1  prefixlen 128  scopeid 0x10<host>
-        loop  txqueuelen 1000  (Local Loopback)
-        RX packets 8279  bytes 658587 (658.5 KB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 8279  bytes 658587 (658.5 KB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-```
-
-## lsof -i:port 查看端口是否开放
-
-```bash
+# lsof -i:port 查看端口是否开放
 lsof -i:3306
 
-COMMAND   PID  USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
-mysqld  15656 admin   25u  IPv6 285819      0t0  TCP *:mysql (LISTEN)
-```
+# nc 设置网络路由
+nc -lnvp 8080 # 监听 8080 端口
 
-## nc 设置网络路由
-
-```bash
-# 监听 8080 端口
-nc -lnvp 8080
-```
-
-## curl 执行 URL 命令
-
-```bash
-# 访问页面
+# curl 传输数据，默认将输出（如下载内容）打印到标准输出，通常需要配合 -o参数保存到文件。
 curl www.baidu.com
+
+# wget 获取文件，默认将文件直接下载并保存到当前目录。
+wget www.baidu.com
 ```
 
-
-
-# 遇到过的问题
-
-## /etc/profile 文件错误导致命令无法使用
-
-[Linux下修复修改profile文件导致命令不用可的解决方法_an7800666的博客-CSDN博客](https://blog.csdn.net/an7800666/article/details/101476361)
-
-在配置环境变量时，修改了/etc/profile 文件，然后source /etc/profile
-
-由于一个配置错误，导致一些系统命令没法使用了
-
-```
- ll
--bash: ls: command not found
-```
-
- 
-
-用下面方法可以修复
-
-命令行 输入;
-
-export PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/X11R6/bin
-
-然后 vi /etc/profile，纠正错误配置，然后source /etc/profile即可
-
-
-
-# linux bash 快捷键
+### bash 快捷键
 
 ```bash
 ctrl+u 删除命令行开始至光标处
@@ -419,24 +327,26 @@ ctrl+e 光标移动到最后面
 ctrl+r 查找历史命令
 ```
 
-# linux 操作系统常用命令
-
-## uname 查看操作系统信息
+### 内存管理
 
 ```bash
-# 查看操作系统信息
+# 查看内存使用情况
+free -h
+
+# 查看内存占用前10的进程
+ps aux --sort=-%mem | head -10
+```
+
+### 进程管理
+
+```bash
+# uname 查看操作系统信息
 uname -a
-```
 
-## hostname 查看主机名
-
-```bash
+# hostname 查看主机名
 hostname
-```
 
-## ps 查看进程信息
-
-```bash
+# ps 查看进程信息
 # 查看系统所有进程的详细信息，这是最常用的命令
 # a：显示所有用户的进程。
 # u：以用户为主的格式显示。
@@ -453,256 +363,159 @@ ps -ef --forest
 
 # 查找特定进程
 ps -aux | grep <name>
-```
 
-## top 查看进程信息
 
-```bash
+# top 查看进程信息
 # 动态显示进程占用资源信息
 top -hv | -bcEHiOSs1 -d secs -n max -u|U user -p pid(s) -o field -w [cols]
-```
 
-## ifconfig 查看网络信息
-
-```bash
-# 查看设备的网络信息 ip mac
-ifconfig
-```
-
-## env 查看环境变量
-
-```bash
+# env 查看环境变量
 env
 ```
 
-
-
-# linux 文件常用命令
-
-## touch 创建文件
+### 应用管理
 
 ```bash
-touch filename
+# apt 是 Debian 和 Ubuntu 系统的包管理工具，用于安装、更新、删除软件包及管理依赖关系。
+# 查看安装的软件包
+apt list --installed
+
+# 搜索包含关键词的包
+apt search <keyword>
+
+# 安装软件包
+sudo apt install <package>            # 安装单个包
+sudo apt install pkg1 pkg2            # 安装多个包
+sudo apt install <package>=<version>  # 安装指定版本
+
+# 卸载软件包
+sudo apt remove <package>   # 保留配置文件
+sudo apt purge <package>    # 彻底删除包及配置
+sudo apt autoremove         # 清理不再需要的依赖
+
+# 升级软件包
+sudo apt update             # 更新软件仓库版本信息
+apt list --upgradable       # 列出可以升级的软件包
+sudo apt upgrade            # 保留旧配置升级
+sudo apt full-upgrade       # 可能移除冲突包（推荐大版本升级时使用）
+
+# 依赖关系
+apt depends <package>         # 查看依赖树
+sudo apt --fix-broken install # 修复依赖关系
+
+# 清除缓存
+sudo apt clean
+
+# snap 是自包含的容器化软件包（.snap格式），集成应用程序及其所有依赖项，支持跨发行版运行
+# snap 软件管理命令和 apt 命令相似，不做赘述
+# snap 有一些高级命令
+
+# aptitude 是提供图形化界面，可以更好地管理包
 ```
 
-## file 查看文件类型
+### 压缩/解压缩命令
 
 ```bash
-file [OPTION...] <file>...
-```
-
-## cat 查看文件内容
-
-```bash
-# 查看文件内容
-cat filename
-```
-
-## more 分页查看文件
-
-```bash
-# 按照屏幕分页查看文件内容
-# A file perusal filter for CRT viewing.
-# CRT: connection remote terminator
-more [options] <file>...
-```
-
-## head 从文件头开始查阅
-
-```bash
-# 查看文件前十行内容
-
-head [OPTION]... [FILE]...
-```
-
-## tail 查看文件尾开始查阅
-
-```bash
-# 查看文件后十行内容
-
-tail [OPTION]... [FILE]...
-```
-
-## xargs 参数转换
-
-```bash
-# 将多行参数转换为单行参数
-
-find / -name "filename" | xargs grep "keywords"
-
-# 将单行参数转换为多行参数
-
-cat filename | xargs -n3
-```
-
-## tar 压缩/解压文件
-
-```bash
+# tar 压缩/解压文件
 # 解压文件
-tar -zxvf filename
+tar -zxvf <filename>
 
 # 压缩文件
-tar -zcvf filename or filepath
+tar -zcvf <filename> or <filepath>
 
-```
-
-## zip 压缩文件
-
-```bash
+# zip 压缩文件
 zip [-options] [-b path] [-t mmddyyyy] [-n suffixes] [zipfile list] [-xi list]
+
+# unzip 解压文件
+unzip <filename>
 ```
 
-## unzip 解压文件
+### tmux 会话
+
+tmux 命令核心用途是通过会话、窗口和窗格的分层管理，提升终端操作的效率和灵活性。主要应用场景：
+
+1. 会话持久化，解决终端断开导致进程终止的问题，同一会话可被多个终端窗口或用户共享，实现协作开发或远程演示。
+2. 多任务并行处理，创建多个独立窗口（Ctrl+b c），每个窗口可运行不同任务，通过快捷键（Ctrl+b n/p）快速切换。
 
 ```bash
-unzip filename
+# 启动命名会话
+tmux new -s <session_name>
+
+# 查看所有会话
+tmux ls
+
+# 重新连接会话
+tmux attach -t <session_name>
+
+# 从会话中分离（返回原终端）
+前缀键 + D  # 按 Ctrl+B，松开，再按 D
+
+# 重命名当前会话
+前缀键 + $
 ```
 
+### cron 定时任务
 
+cron 的核心是一个长期运行在后台的**守护进程**，通常名为 `crond`。它的唯一职责就是“按时执行任务”。
 
-# linux 网络通讯常用命令
+工作流程
 
-## wget 网络通讯
+1. **启动与加载**：系统启动时，`crond` 被初始化（通过 systemd、init 等）。它会立即加载所有用户的 crontab 文件（来自 `/var/spool/cron/` 或 `/etc/cron.d/`）以及系统级的 `/etc/crontab` 文件到内存中。
+2. **休眠与唤醒**：`crond` 随后进入休眠状态，但会设置一个“闹钟”，在**下一分钟开始时**唤醒自己。
+3. **检查与执行**：每分钟被唤醒后，`crond` 会：
+    *   检查内存中所有任务计划。
+    *   将当前时间（年、月、日、周、时、分）与每个任务的“时间字段”进行匹配。
+    *   将所有匹配到的任务，**立即**交给其指定的 shell（如 `/bin/sh`）去创建一个子进程执行。
+    *   **重要**：任务执行是**并发**的，每分钟内匹配到的所有任务会同时启动，互不等待。
+4. **记录日志**：`crond` 会将所有任务的执行行为（启动、完成）记录到系统日志（通常是 `/var/log/cron` 或 `journalctl -u cron`），这对于调试至关重要。
+5. **循环**：完成后，再次计算到下一分钟的时间，进入休眠，等待下一次唤醒。
 
-```bash
-# GNU Wget is a free software package for retrieving files using HTTP, HTTPS, FTP and FTPS, the most widely used Internet protocols.
-# It is a non-interactive commandline tool, so it may easily be called from scripts, cron jobs, terminals without X-Windows support, etc.
+注意事项：
 
-wget [OPTION]... [URL]...
-```
-
-
-
-## curl 文件传输下载
-
-```bash
-# command line tool and library for transferring data with URLs (since 1998)
-# curl 是常用的命令行工具，用来请求服务器，与服务器之间传输数据。
-
-curl [options...] <url>
-```
-
-
-
-# linux 安全常用命令
-
-## gpg 加密
-
-```bash
-# Supported algorithms:
-# Pubkey: RSA, ELG, DSA, ECDH, ECDSA, EDDSA
-# Cipher: IDEA, 3DES, CAST5, BLOWFISH, AES, AES192, AES256, TWOFISH,
-#         CAMELLIA128, CAMELLIA192, CAMELLIA256
-# Hash: SHA1, RIPEMD160, SHA256, SHA384, SHA512, SHA224
-# Compression: Uncompressed, ZIP, ZLIB, BZIP2
-
-gpg [options] [files]
-```
-
-```bash
-root@iZ2ze49dgr09ifxfj9lirgZ:~# gpg --gen-key
-gpg (GnuPG) 2.2.19; Copyright (C) 2019 Free Software Foundation, Inc.
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-
-gpg: directory '/root/.gnupg' created
-gpg: keybox '/root/.gnupg/pubring.kbx' created
-Note: Use "gpg --full-generate-key" for a full featured key generation dialog.
-
-GnuPG needs to construct a user ID to identify your key.
-
-Real name: testkey
-Email address: test@mail.com
-You selected this USER-ID:
-    "testkey <test@mail.com>"
-
-Change (N)ame, (E)mail, or (O)kay/(Q)uit? o
-We need to generate a lot of random bytes. It is a good idea to perform
-some other action (type on the keyboard, move the mouse, utilize the
-disks) during the prime generation; this gives the random number
-generator a better chance to gain enough entropy.
-We need to generate a lot of random bytes. It is a good idea to perform
-some other action (type on the keyboard, move the mouse, utilize the
-disks) during the prime generation; this gives the random number
-generator a better chance to gain enough entropy.
-gpg: /root/.gnupg/trustdb.gpg: trustdb created
-gpg: key C00C9AFCA7D9017D marked as ultimately trusted
-gpg: directory '/root/.gnupg/openpgp-revocs.d' created
-gpg: revocation certificate stored as '/root/.gnupg/openpgp-revocs.d/8406B61A034AECDA03443297C00C9AFCA7D9017D.rev'
-public and secret key created and signed.
-
-pub   rsa3072 2022-01-20 [SC] [expires: 2024-01-20]
-      8406B61A034AECDA03443297C00C9AFCA7D9017D
-uid                      testkey <test@mail.com>
-sub   rsa3072 2022-01-20 [E] [expires: 2024-01-20]
-
-```
-
-
-
-# linux make 编译工具
-
-makefile 是一个编辑工具，能让编译过程更加轻松，编译器是 gcc 和 g++。
-
-makefile 可以看做是脚本语言。
-
-# linux jdk 安装
-
-[Linux安装jdk8及环境变量配置 - 简书 (jianshu.com)](https://www.jianshu.com/p/f000e05f3512)
-
-```bash
-# 配置环境变量
-vi /etc/profile
-
-export JAVA_HOME=/usr/local/jdk-16.0.2
-export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
-export PATH=$PATH:$JAVA_HOME/bin
-```
-
-```bash
-# 环境变量生效
-source /etc/profile
-```
-
-# linux maven 安装
-
-[linux安装maven - 惊涛随笔 - 博客园 (cnblogs.com)](https://www.cnblogs.com/jtnote/p/9982185.html)
-
+*  **环境变量**：`crond` 执行任务时，其环境变量**非常精简**，通常只包含最基本的环境（如 `PATH=/usr/bin:/bin`）。这与您登录 Shell 的丰富环境不同。因此，在 crontab 中执行的命令**必须使用绝对路径**，或者在脚本开头显式设置 `PATH` 等变量。
+*  **执行上下文**：任务在**其所属用户**的身份下执行。例如，用户 `ubuntu` 的 cron 任务，会以 `ubuntu` 的权限运行，可以访问 `ubuntu` 有权访问的文件。
 
 
 ```bash
-# 配置环境变量
-vi /etc/profile
+# 列出当前用户的所有cron任务
+crontab -l
 
-export MAVEN_HOME=/opt/apache-maven-3.5.4
-export PATH=$MAVEN_HOME/bin:$PATH
+# 编辑当前用户的cron任务表
+crontab -e
+
+# 删除当前用户的cron任务表（慎用，会删除所有任务）
+crontab -r
+
+# linux crontab 表达式
+* * * * * <script>
+│ │ │ │ │
+│ │ │ │ └── 星期几 (0-7, 0和7都表示周日)
+│ │ │ └──── 月份 (1-12 或 JAN-DEC)
+│ │ └────── 日期 (1-31)
+│ └──────── 小时 (0-23)
+└────────── 分钟 (0-59)
+
+# 预定义宏，等价于表达式，可以替代使用
+# `@reboot`：在系统启动后执行一次（不是“每次重启计划”，因为 crontab 只在启动时被读取）。
+# `@yearly` / `@annually`：等同于 `0 0 1 1 *`（每年1月1日0点0分）。
+# `@monthly`：等同于 `0 0 1 * *`（每月1号0点0分）。
+# `@weekly`：等同于 `0 0 * * 0`（每周日0点0分）。
+# `@daily` / `@midnight`：等同于 `0 0 * * *`（每天0点0分）。
+# `@hourly`：等同于 `0 * * * *`（每小时0分）。
 ```
 
-```bash
-# 环境变量生效
-source /etc/profile
-```
+### 终端和终端模拟器
 
-```bash
-# 更改maven配置
+- **终端（Terminal）**：用户与计算机交互的**输入/输出界面**，分为**物理终端**（如早期电传打字机，已淘汰）和**虚拟终端**（如Linux的`/dev/tty1`~`tty6`，通过`Ctrl+Alt+F1`切换）。本质是内核提供的字符设备接口，负责传递用户输入并显示系统输出。
 
-# 本地仓库
-<localRepository>/usr/local/maven/local_repository</localRepository>
+- **终端模拟器（Terminal Emulator）**：**软件程序**（如GNOME Terminal、Windows Terminal），模拟物理终端的行为，提供图形化界面、多标签、自定义主题等增强功能。依赖**伪终端（PTY）**与内核通信，是现代系统的主要交互方式。
 
-# 镜像源
-<mirror>
-    <id>aliyunmaven</id>
-    <mirrorOf>*</mirrorOf>
-    <name>阿里云公共仓库</name>
-    <url>https://maven.aliyun.com/repository/public</url>
-</mirror>
-```
+- **TTY（Teletypewriter）**：**内核子系统**，管理终端设备的输入/输出。分为**物理TTY**（如串口终端`/dev/ttyS0`）和**虚拟TTY**（如`/dev/tty1`）。负责处理行规程（如回显、特殊字符映射，如`Ctrl+C`发送`SIGINT`）。
 
-# linux rocketmq 安装
+- **PTY（Pseudo Terminal）**：**用户态模拟的终端**，由**主设备（Master）**和**从设备（Slave）**组成（如`/dev/ptmx`为主设备，`/dev/pts/0`为从设备）。终端模拟器（如SSH客户端）通过主设备与内核通信，从设备连接Shell，实现远程登录、图形终端等功能。  
 
-```bash
-# 解压
+- **Shell**：用户与操作系统内核之间的**命令解释器**，负责解析用户输入的命令（如`ls -l`）并调用内核执行。常见类型包括Bash（Linux默认）、Zsh（增强交互）、PowerShell（Windows）。  
 
+- **命令执行流程**：用户在终端模拟器输入命令→终端模拟器通过PTY将命令传递给Shell→Shell解析命令并调用内核→内核执行后将结果返回Shell→Shell将结果通过PTY传回终端模拟器显示。示例：用户输入 → 终端模拟器 → PTY 主设备 → TTY 驱动 → Shell → 内核执行 → Shell 输出 → TTY 驱动 → PTY 从设备 → 终端模拟器 → 屏幕显示。
 
-```
 

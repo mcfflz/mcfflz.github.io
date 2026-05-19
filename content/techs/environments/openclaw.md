@@ -284,25 +284,20 @@ vi ~/.openclaw/openclaw.json
 
 ## 常用 openclaw 命令
 
-### 配置管理
+### openclaw config 配置管理
+
+通常直接编辑配置文件，不使用命令行。
+
 ```bash
-# 查看当前配置
-openclaw config show
+# 查看当前配置文件
+openclaw config file
 
-# 设置配置项
-openclaw config set <key> <value>
-
-# 重置配置
-openclaw config reset
-
-# 导出配置
-openclaw config export > backup-config.json
-
-# 导入配置
-openclaw config import < backup-config.json
+# 进入配置流程
+openclaw config
 ```
 
-### 服务管理
+### openclaw gateway 网关管理
+
 ```bash
 # 检查网关状态
 openclaw gateway status
@@ -315,74 +310,182 @@ openclaw gateway stop
 
 # 重启网关服务
 openclaw gateway restart
-
-# 查看网关日志
-openclaw gateway logs
 ```
 
-### 模型管理
+### openclaw models 模型管理
+
 ```bash
 # 列出所有可用模型
 openclaw models list
 
-# 查看当前默认模型
-openclaw models current
-
 # 设置默认模型
 openclaw models set <model-name>
-
-# 测试模型连接
-openclaw models test <model-name>
+openclaw models set-image <model-name>
 ```
 
-### 技能管理
+### openclaw skills 技能管理
+
 ```bash
 # 列出所有技能
 openclaw skills list
 
-# 安装技能
-openclaw skills install <skill-name>
-
-# 更新技能
-openclaw skills update <skill-name>
-
-# 卸载技能
-openclaw skills uninstall <skill-name>
-
 # 查看技能详情
-openclaw skills show <skill-name>
-
-# 启用技能
-openclaw skills enable <skill-name>
-
-# 禁用技能
-openclaw skills disable <skill-name>
+openclaw skills info <skill-name>
 ```
 
-
-### 通道管理
+### openclaw channels 渠道管理
 
 ```bash
-# 列出所有通道
+# 列出所有渠道
 openclaw channels list
 
-# 查看通道状态
-openclaw channels status <channel-name>
-
-# 启用通道
-openclaw channels enable <channel-name>
-
-# 禁用通道
-openclaw channels disable <channel-name>
+# 查看渠道状态
+openclaw channels status
 ```
 
-## openclaw tui
-
-### 调整界面尺寸
+### openclaw sessions 会话管理
 
 ```bash
-stty rows 40 cols 120
+# 列出所有会话
+openclaw sessions
 ```
+
+## openclaw cron 定时任务
+
+openclaw cron 是管理 cron 定时任务的命令。定时任务存储在 `~/.openclaw/cron/jobs.json` 目录。
+
+以下命令了解即可，主要还是通过 agent 对话让 openclaw 自己添加任务。
+
+```bash
+# 列出任务
+openclaw cron list
+
+# 添加任务
+# 建议不要手动编辑，直接让模型添加
+openclaw cron add
+openclaw cron edit --id <id>
+
+# 更新任务状态
+openclaw cron enable --id <id>
+openclaw cron disable --id <id>
+
+# 删除任务
+openclaw cron rm --id <id>
+
+# 立即运行
+openclaw cron run --id <id>
+
+# 查看任务执行历史
+openclaw cron runs --id <id>
+```
+
+`job.json` 任务格式
+
+```json
+{
+    "id": "任务id",
+    "name": "任务名称",
+    "enabled": true,
+    "createdAtMs": 1700000000000,
+    "updatedAtMs": 1700003600000,
+    "schedule": {
+        "kind": "every" | "at" | "cron",
+        "everyMs": 3000,                    // every模式：间隔毫秒数
+        "at": "2026-03-16T10:00:00Z",       // at模式：指定时间点
+        "expr": "*/5 *",                    // cron模式：cron表达式
+        "tz": "Asia/Shanghai"               // 可选：时区
+    },
+    "sessionTarget": "main" | "isolated",   // 目标 session
+    "payload": {
+        "kind": "systemEvent" | "agentTurn",
+        "text": "系统事件内容",             // systemEvent模式，触发系统事件
+        "message": "代理消息"               // agentTurn模式，执行一个 Agent 对话回合
+    },
+    "delivery": {
+        "mode": "none" | "announce" | "webhook",    // announce 发送到指定渠道 webhook 发送到指定链接
+        "channel": "Feishu",                        // announce 模式
+        "to": "@username",
+        "url": "https://your-api.example.com/task-callback",    // webhook 模式
+        "headers": {                                            // webhook 模式
+            "Authorization": "Bearer your-secret-token-here",   // webhook 模式
+            "Content-Type": "application/json"                  // webhook 模式
+        }
+    },
+    "state": {                              // 运行状态
+        "nextRunAtMs": 1773645468047,
+        "lastRunAtMs": 1773645168047,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 120210,
+        "lastDeliveryStatus": "not-requested",
+        "consecutiveErrors": 0
+    }
+}
+```
+
+使用示例：
+
+1. 每天上午9点执行
+
+```json
+{
+    "name": "每日早报",
+    "schedule": {
+        "kind": "cron",
+        "expr": "0 9 *",
+        "tz": "Asia/Shanghai"
+    },
+    "sessionTarget": "main",
+    "payload": {
+        "kind": "systemEvent",
+        "text": "生成每日报告..."
+    }
+}
+```
+
+2. 使用代理执行复杂任务
+
+```json
+{
+    "name": "数据分析任务",
+    "schedule": {
+        "kind": "every",
+        "everyMs": 36000
+    },
+    "sessionTarget": "isolated",
+    "payload": {
+    "kind": "agentTurn",
+        "message": "请分析最新的数据并生成报告"
+    },
+    "delivery": {
+        "mode": "announce",
+        "channel": "telegram"
+    }
+}
+```
+
+## 让 openclaw 主动发起任务
+
+openclaw 的设计理念是被动响应式 AI，因此大多数情况下都是被动响应的。
+
+思路：配置 openclaw cron 定时任务，使用 agent 执行任务，并将处理结果发送到指定的消息渠道。
+
+## 让 openclaw 学会使用浏览器
+
+思路：利用内置 brower 和 web-fetch 工具，在需要交互的场合使用 brower，在需要获取信息的场合使用 web-fetch。
+
+让 agent 学习使用浏览器，并建立一个使用浏览器的技能。
+
+```bash
+
+openclaw browser status
+
+openclaw browser start
+
+```
+
+## openclaw devices 管理
+
 
 ## 个人理解
 

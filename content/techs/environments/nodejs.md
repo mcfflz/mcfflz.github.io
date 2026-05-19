@@ -209,6 +209,16 @@ npm config edit -g
 npm config set //<registry-domain>/:_authToken <your-token>
 ```
 
+### 清理缓存
+
+```bash
+# 查看缓存使用情况
+npm cache verify
+
+# 清理所有缓存
+npm cache clean --force
+```
+
 ### 其他命令
 
 ```bash

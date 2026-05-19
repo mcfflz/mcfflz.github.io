@@ -68,7 +68,7 @@ EOF
 sudo apt update
 
 # 安装 docker 核心组件
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker compose-plugin
 
 # 启动 docker 服务
 sudo systemctl status docker
@@ -111,6 +111,29 @@ sudo docker run hello-world
 - `docker rm <container>` - 删除容器
 - `docker exec -it <container> /bin/bash` - 进入容器执行命令
 
+### 系统清理命令
+
+```bash
+# 查看 Docker 磁盘使用概况
+docker system df
+
+# 执行基础清理（会要求你确认，输入 y）
+# 删除所有已停止的容器
+# 删除所有未被任何容器使用的网络
+# 删除所有悬空的镜像（dangling images）：即没有标签（<none>:<none>）且未被任何容器引用的中间镜像层
+# 删除构建缓存（build cache）
+docker system prune
+
+# 清理未被容器引用的镜像
+docker system prune -a
+
+# （极其谨慎！）清理未使用的卷，仅在确定数据可丢弃时使用
+docker system prune --volumes
+
+# 一键清理（-f 强制清理，跳过确认）
+docker system prune -a -f --volumes
+```
+
 ### 其他常用命令
 
 - `docker logs <container>` - 查看容器日志
@@ -118,7 +141,6 @@ sudo docker run hello-world
 - `docker inspect <container>` - 查看容器详细信息
 - `docker volume` - 管理数据卷
 - `docker network` - 管理网络
-- `docker system prune` - 清理未使用的数据（镜像、容器、网络、数据卷）
 
 ### docker run 常用参数
 
@@ -256,13 +278,12 @@ docker build -t my-image .
 docker build -f Dockerfile.prod -t my-image:prod .
 
 # 使用构建参数
-docker build --build-arg NODE_ENV=production -t my-image .
-
+docker build --build-arg NODE_ENV=production -t my-image .2
 # 使用 BuildKit（更快的构建速度）
 DOCKER_BUILDKIT=1 docker build -t my-image .
 ```
 
-## docker-compose.yaml
+## docker compose.yaml
 
 Docker Compose 允许使用 YAML 文件来定义和管理多容器应用。
 
@@ -371,40 +392,40 @@ networks:
     internal: true  # 内部网络，不连接外网
 ```
 
-### Compose 常用命令
+### docker compose 常用命令
 
 ```bash
 # 启动服务（后台运行）
-docker-compose up -d
+docker compose up -d
 
 # 启动并重建容器
-docker-compose up -d --build
+docker compose up -d --build
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 
 # 查看日志
-docker-compose logs
-docker-compose logs -f app  # 跟踪特定服务日志
+docker compose logs
+docker compose logs -f app  # 跟踪特定服务日志
 
 # 停止服务
-docker-compose stop
+docker compose stop
 
 # 停止并删除容器、网络（保留数据卷）
-docker-compose down
+docker compose down
 
 # 停止并删除容器、网络和数据卷
-docker-compose down -v
+docker compose down -v
 
 # 重启服务
-docker-compose restart
+docker compose restart
 
 # 进入服务容器
-docker-compose exec app /bin/bash
+docker compose exec app /bin/bash
 
 # 构建/重建服务
-docker-compose build
-docker-compose build --no-cache  # 不使用缓存
+docker compose build
+docker compose build --no-cache  # 不使用缓存
 ```
 
 ## Docker 实践示例
@@ -554,9 +575,7 @@ curl http://localhost:3000
 
 ### 示例 5：使用 Docker Compose
 
-Docker Compose 允许使用 YAML 文件来定义多容器应用。
-
-1. 创建 `docker-compose.yml`：
+1. 创建 `docker compose.yml`：
 
 ```yaml
 version: '3.8'
@@ -595,13 +614,13 @@ volumes:
 
 ```bash
 # 启动服务
-docker-compose up -d
+docker compose up -d
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 
 # 停止服务
-docker-compose down
+docker compose down
 ```
 
 ## Docker 最佳实践
